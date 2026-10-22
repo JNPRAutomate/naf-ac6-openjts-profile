@@ -474,6 +474,20 @@
           "replacement": "${1}"
         }
       ]
+    },
+    {
+      "order": 310,
+      "namepass": [
+        "SYSTEM"
+      ],
+      "entries": [
+        {
+          "type": 2,
+          "key": "process_pid",
+          "pattern": "^.*$",
+          "replacement": "all"
+        }
+      ]
     }
   ],
   "strings_list": [

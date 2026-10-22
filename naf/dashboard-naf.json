@@ -40,7 +40,7 @@
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "Junos release, family and model come from the JTSO metadata enrichment (no extra sensor needed).",
+      "description": "Junos release and family come from the JTSO metadata enrichment (no extra sensor needed).",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -89,7 +89,7 @@
       },
       "targets": [
         {
-          "query": "SELECT last(\"if_mtu\") AS \"x\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"FAMILY\", \"MODEL\", \"VERSION\"",
+          "query": "SELECT last(\"if_mtu\") AS \"x\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"FAMILY\", \"VERSION\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table"
@@ -113,14 +113,12 @@
               "SHORTNAME": 0,
               "device": 1,
               "FAMILY": 2,
-              "MODEL": 3,
-              "VERSION": 4
+              "VERSION": 3
             },
             "renameByName": {
               "SHORTNAME": "Device",
               "device": "Mgmt IP",
               "FAMILY": "Family",
-              "MODEL": "Model",
               "VERSION": "Junos release"
             }
           }
@@ -365,7 +363,7 @@
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "cRPD: sum of cpu-utilization of all processes (gNMI /system/processes). cSRX: SPU CPU from 'show security monitoring' (data plane).",
+      "description": "cRPD: sum of cpu-utilization of long-running processes (gNMI /system/processes). Short-lived helpers (ifinfo, python3, ps, sh) are excluded because they report CPU relative to their own lifetime. cSRX: SPU CPU from 'show security monitoring' (data plane).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -417,7 +415,7 @@
       },
       "targets": [
         {
-          "query": "SELECT sum(\"c\") FROM (SELECT mean(\"process_cpu_utilization\") AS \"c\" FROM \"SYSTEM\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"process_pid\") WHERE $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
+          "query": "SELECT sum(\"c\") FROM (SELECT mean(\"process_cpu_utilization\") AS \"c\" FROM \"SYSTEM\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"process_name\" !~ /^(ifinfo|python3|ps|sh)$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"process_name\") WHERE $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1763,6 +1761,6 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 13,
+  "version": 16,
   "weekStart": ""
 }

@@ -183,6 +183,8 @@ This file follows the same structure, with a gNMI input and more processors.
 
 Other processors are available if you need to change data further: `clone_list`, `pivot_list`, `xreducer_list`, `converter_list`, `enum_list`, `strings_list`. Look at the native profiles in `JTS/design_profile/` for examples.
 
+> **Watch the number of InfluxDB series.** Every distinct tag value creates a new series. Never keep a tag that changes over time, such as a process PID: the cRPD keeps spawning short-lived processes (`mgd` for every NETCONF session, `ifinfo`, `ps`, …), and each one would add new series. The NAF profile overwrites `process_pid` with a constant through `regex_list` (`"type": 2`), which keeps one series per process name. To check, run `SHOW SERIES EXACT CARDINALITY FROM "<measurement>"`. The count should stay flat over time.
+
 ---
 
 ## 5. The Grafana dashboard
