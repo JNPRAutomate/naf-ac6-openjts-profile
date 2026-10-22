@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "min-interval": 30,
+  "description": "This profile provides template for collecting NAF workshop related data",
+  "telegraf": {
+    "crpd": [{
+      "version": "all",
+      "conf": "crpd_naf.json"
+    }],
+    "csrx": [{
+      "version": "all",
+      "conf": "csrx_naf.json"
+    }]
+  },
+  "kapacitor": null,
+  "grafana": [
+    "dashboard-naf.json"
+  ]
+}

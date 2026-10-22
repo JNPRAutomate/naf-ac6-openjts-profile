@@ -1,0 +1,62 @@
+{
+  "netconf_inputs": [{
+    "subscriptions": [{
+      "name": "INTERFACES",
+      "rpc": "<get-interface-information></get-interface-information>",
+      "fields": [{
+          "field_path": "/interface-information/physical-interface[name]/mtu",
+          "field_type": "int"
+        },
+        {
+          "field_path": "/interface-information/physical-interface[name]/admin-status",
+          "field_type": "string"
+        },
+        {
+          "field_path": "/interface-information/physical-interface[name]/oper-status",
+          "field_type": "string"
+        }
+      ],
+      "interval": 30
+    }]
+  }],
+  "rename_list": [{
+    "order": 100,
+    "namepass": ["INTERFACES"],
+    "entries": [{
+        "type": 0,
+        "from": "name",
+        "to": "if_name"
+      },
+      {
+        "type": 1,
+        "from": "mtu",
+        "to": "if_mtu"
+      },
+      {
+        "type": 1,
+        "from": "admin-status",
+        "to": "if_admin_status"
+      },
+      {
+        "type": 1,
+        "from": "oper-status",
+        "to": "if_oper_status"
+      }
+    ]
+  }],
+  "enrichment_list": [{
+    "order": 200,
+    "namepass": ["INTERFACES"],
+    "family": "csrx",
+    "two_levels": false,
+    "level1_tag": "device"
+  }],
+  "influx_outputs": [{
+    "retention": "autogen",
+    "fieldpass": [
+      "if_mtu",
+      "if_admin_status",
+      "if_oper_status"
+    ]
+  }]
+}
