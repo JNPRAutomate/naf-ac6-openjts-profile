@@ -1,62 +1,317 @@
 {
-  "netconf_inputs": [{
-    "subscriptions": [{
-      "name": "INTERFACES",
-      "rpc": "<get-interface-information></get-interface-information>",
-      "fields": [{
-          "field_path": "/interface-information/physical-interface[name]/mtu",
-          "field_type": "int"
+  "netconf_inputs": [
+    {
+      "subscriptions": [
+        {
+          "name": "INTERFACES",
+          "rpc": "<get-interface-information></get-interface-information>",
+          "fields": [
+            {
+              "field_path": "/interface-information/physical-interface[name]/mtu",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/interface-information/physical-interface[name]/admin-status",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/interface-information/physical-interface[name]/oper-status",
+              "field_type": "string"
+            }
+          ],
+          "interval": 30
         },
         {
-          "field_path": "/interface-information/physical-interface[name]/admin-status",
-          "field_type": "string"
+          "name": "SYSTEM_STORAGE",
+          "rpc": "<get-system-storage></get-system-storage>",
+          "fields": [
+            {
+              "field_path": "/system-storage-information/filesystem[mounted-on]/used-percent",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/system-storage-information/filesystem[mounted-on]/filesystem-name",
+              "field_type": "string"
+            }
+          ],
+          "interval": 60
         },
         {
-          "field_path": "/interface-information/physical-interface[name]/oper-status",
-          "field_type": "string"
+          "name": "SECURITY_FLOW",
+          "rpc": "<get-flow-session-information><summary/></get-flow-session-information>",
+          "fields": [
+            {
+              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/active-sessions",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/active-unicast-sessions",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/failed-sessions",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/active-drop-sessions",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/max-sessions",
+              "field_type": "int"
+            }
+          ],
+          "interval": 60
+        },
+        {
+          "name": "SECURITY_SPU",
+          "rpc": "<get-performance-summary-information></get-performance-summary-information>",
+          "fields": [
+            {
+              "field_path": "/performance-summary-information/performance-summary-statistics[fpc-number]/spu-cpu-utilization",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/performance-summary-information/performance-summary-statistics[fpc-number]/spu-memory-utilization",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/performance-summary-information/performance-summary-statistics[fpc-number]/spu-current-flow-session",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/performance-summary-information/performance-summary-statistics[fpc-number]/spu-max-flow-session",
+              "field_type": "int"
+            }
+          ],
+          "interval": 30
+        },
+        {
+          "name": "SECURITY_FLOW",
+          "rpc": "<get-flow-statistics-all></get-flow-statistics-all>",
+          "fields": [
+            {
+              "field_path": "/flow-statistics-all/flow-pkt-count-rx",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/flow-statistics-all/flow-pkt-count-tx",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/flow-statistics-all/flow-pkt-count-fwd",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/flow-statistics-all/flow-pkt-count-drop",
+              "field_type": "int"
+            }
+          ],
+          "interval": 30
         }
+      ]
+    }
+  ],
+  "rename_list": [
+    {
+      "order": 100,
+      "namepass": [
+        "INTERFACES"
       ],
-      "interval": 30
-    }]
-  }],
-  "rename_list": [{
-    "order": 100,
-    "namepass": ["INTERFACES"],
-    "entries": [{
-        "type": 0,
-        "from": "name",
-        "to": "if_name"
-      },
-      {
-        "type": 1,
-        "from": "mtu",
-        "to": "if_mtu"
-      },
-      {
-        "type": 1,
-        "from": "admin-status",
-        "to": "if_admin_status"
-      },
-      {
-        "type": 1,
-        "from": "oper-status",
-        "to": "if_oper_status"
-      }
-    ]
-  }],
-  "enrichment_list": [{
-    "order": 200,
-    "namepass": ["INTERFACES"],
-    "family": "csrx",
-    "two_levels": false,
-    "level1_tag": "device"
-  }],
-  "influx_outputs": [{
-    "retention": "autogen",
-    "fieldpass": [
-      "if_mtu",
-      "if_admin_status",
-      "if_oper_status"
-    ]
-  }]
+      "entries": [
+        {
+          "type": 0,
+          "from": "name",
+          "to": "if_name"
+        },
+        {
+          "type": 1,
+          "from": "mtu",
+          "to": "if_mtu"
+        },
+        {
+          "type": 1,
+          "from": "admin-status",
+          "to": "if_admin_status"
+        },
+        {
+          "type": 1,
+          "from": "oper-status",
+          "to": "if_oper_status"
+        }
+      ]
+    },
+    {
+      "order": 110,
+      "namepass": [
+        "SYSTEM_STORAGE",
+        "SECURITY_FLOW",
+        "SECURITY_SPU"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "mounted-on",
+          "to": "mount_point"
+        },
+        {
+          "type": 1,
+          "from": "used-percent",
+          "to": "storage_used_pct"
+        },
+        {
+          "type": 1,
+          "from": "filesystem-name",
+          "to": "filesystem_name"
+        },
+        {
+          "type": 1,
+          "from": "active-sessions",
+          "to": "flow_active_sessions"
+        },
+        {
+          "type": 1,
+          "from": "active-unicast-sessions",
+          "to": "flow_active_unicast_sessions"
+        },
+        {
+          "type": 1,
+          "from": "failed-sessions",
+          "to": "flow_failed_sessions"
+        },
+        {
+          "type": 1,
+          "from": "active-drop-sessions",
+          "to": "flow_active_drop_sessions"
+        },
+        {
+          "type": 1,
+          "from": "max-sessions",
+          "to": "flow_max_sessions"
+        },
+        {
+          "type": 0,
+          "from": "fpc-number",
+          "to": "spu_fpc"
+        },
+        {
+          "type": 1,
+          "from": "spu-cpu-utilization",
+          "to": "spu_cpu_pct"
+        },
+        {
+          "type": 1,
+          "from": "spu-memory-utilization",
+          "to": "spu_mem_pct"
+        },
+        {
+          "type": 1,
+          "from": "spu-current-flow-session",
+          "to": "spu_flow_sessions"
+        },
+        {
+          "type": 1,
+          "from": "spu-max-flow-session",
+          "to": "spu_max_flow_sessions"
+        },
+        {
+          "type": 1,
+          "from": "flow-pkt-count-rx",
+          "to": "flow_pkts_rx"
+        },
+        {
+          "type": 1,
+          "from": "flow-pkt-count-tx",
+          "to": "flow_pkts_tx"
+        },
+        {
+          "type": 1,
+          "from": "flow-pkt-count-fwd",
+          "to": "flow_pkts_fwd"
+        },
+        {
+          "type": 1,
+          "from": "flow-pkt-count-drop",
+          "to": "flow_pkts_drop"
+        }
+      ]
+    }
+  ],
+  "enrichment_list": [
+    {
+      "order": 200,
+      "namepass": [
+        "INTERFACES"
+      ],
+      "family": "csrx",
+      "two_levels": false,
+      "level1_tag": "device"
+    },
+    {
+      "order": 220,
+      "namepass": [
+        "SYSTEM_STORAGE",
+        "SECURITY_FLOW",
+        "SECURITY_SPU"
+      ],
+      "family": "csrx",
+      "two_levels": false,
+      "level1_tag": "device"
+    }
+  ],
+  "influx_outputs": [
+    {
+      "retention": "autogen",
+      "fieldpass": [
+        "if_mtu",
+        "if_admin_status",
+        "if_oper_status",
+        "storage_used_pct",
+        "filesystem_name",
+        "flow_active_sessions",
+        "flow_active_unicast_sessions",
+        "flow_failed_sessions",
+        "flow_active_drop_sessions",
+        "flow_max_sessions",
+        "spu_cpu_pct",
+        "spu_mem_pct",
+        "spu_flow_sessions",
+        "spu_max_flow_sessions",
+        "flow_pkts_rx_rate",
+        "flow_pkts_tx_rate",
+        "flow_pkts_fwd_rate",
+        "flow_pkts_drop_rate"
+      ]
+    }
+  ],
+  "filtering_list": [
+    {
+      "order": 150,
+      "namepass": [
+        "SYSTEM_STORAGE"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "mount_point",
+          "pattern": "^/$",
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "rate_list": [
+    {
+      "order": 500,
+      "namepass": [
+        "SECURITY_FLOW"
+      ],
+      "fields": [
+        "flow_pkts_rx",
+        "flow_pkts_tx",
+        "flow_pkts_fwd",
+        "flow_pkts_drop"
+      ]
+    }
+  ]
 }

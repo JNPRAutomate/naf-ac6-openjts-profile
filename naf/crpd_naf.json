@@ -1,347 +1,683 @@
 {
-  "gnmi_inputs": [{
-    "subscriptions": [{
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/global/state",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/description",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/peer-as",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues",
-        "mode": "sample",
-        "interval": 60
-      },
-      {
-        "name": "NETWORK_INSTANCE_BGP",
-        "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/session-state",
-        "mode": "on_change",
-        "interval": 0
-      },
-      {
-        "name": "INTERFACES",
-        "path": "/interfaces/interface/state/counters",
-        "mode": "sample",
-        "interval": 30
-      }
-    ]
-  }],
-  "rename_list": [{
-    "order": 100,
-    "namepass": ["NETWORK_INSTANCE_BGP", "INTERFACES"],
-    "entries": [{
-        "type": 0,
-        "from": "/network-instances/network-instance/name",
-        "to": "instance_name"
-      },
-      {
-        "type": 0,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/neighbor-address",
-        "to": "neighbor_address"
-      },
-      {
-        "type": 0,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/afi-safi-name",
-        "to": "neighbor_afi_safi_name"
-      },
-      {
-        "type": 0,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/afi-safi-name",
-        "to": "peer_group_afi_safi_name"
-      },
-      {
-        "type": 0,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/peer-group-name",
-        "to": "peer_group_name"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/total-paths",
-        "to": "global_total_paths"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/total-prefixes",
-        "to": "global_total_prefixes"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/as",
-        "to": "global_as"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/state/total-paths",
-        "to": "group_total_paths"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/state/total-prefixes",
-        "to": "group_total_prefixes"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/total-paths",
-        "to": "group_safi_total_paths"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/total-prefixes",
-        "to": "group_safi_total_prefixes"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/accepted",
-        "to": "group_safi_accepted"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/installed",
-        "to": "group_safi_installed"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/received",
-        "to": "group_safi_received"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/sent",
-        "to": "group_safi_sent"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/accepted",
-        "to": "safi_accepted"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/installed",
-        "to": "safi_installed"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/received-pre-policy",
-        "to": "safi_received_pre_policy"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/received",
-        "to": "safi_received"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/rejected",
-        "to": "safi_rejected"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/sent",
-        "to": "safi_sent"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues/input",
-        "to": "session_input_queue"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues/output",
-        "to": "session_output_queue"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/session-state",
-        "to": "session_state"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/peer-as",
-        "to": "session_peer_as"
-      },
-      {
-        "type": 1,
-        "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/description",
-        "to": "session_description"
-      },
-      {
-        "type": 0,
-        "from": "/interfaces/interface/name",
-        "to": "if_name"
-      },
-      {
-        "type": 0,
-        "from": "/interfaces/interface/@name",
-        "to": "if_name"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/in-octets",
-        "to": "in_octets"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/out-octets",
-        "to": "out_octets"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/in-pkts",
-        "to": "in_pkts"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/out-pkts",
-        "to": "out_pkts"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/in-errors",
-        "to": "in_errors"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/out-errors",
-        "to": "out_errors"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/in-multicast-pkts",
-        "to": "mcast_in_pkts"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/in-drops",
-        "to": "in_drops"
-      },
-      {
-        "type": 1,
-        "from": "/interfaces/interface/state/counters/out-drops",
-        "to": "out_drops"
-      }
-    ]
-  }],
-  "filtering_list": [{
-    "order": 150,
-    "namepass": ["INTERFACES"],
-    "filters": [{
-      "type": 0,
-      "key": "if_name",
-      "pattern": "^(eth|lo).*",
-      "action": "accept"
-    }]
-  }],
-  "enrichment_list": [{
+  "gnmi_inputs": [
+    {
+      "subscriptions": [
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/global/state",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/description",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/peer-as",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/session-state",
+          "mode": "on_change",
+          "interval": 0
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/counters",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/admin-status",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/oper-status",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/mtu",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/ifindex",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "INTERFACES",
+          "path": "/interfaces/interface/state/type",
+          "mode": "sample",
+          "interval": 30
+        },
+        {
+          "name": "SYSTEM",
+          "path": "/system/processes/process/state",
+          "mode": "sample",
+          "interval": 60
+        }
+      ]
+    }
+  ],
+  "rename_list": [
+    {
+      "order": 100,
+      "namepass": [
+        "NETWORK_INSTANCE_BGP",
+        "INTERFACES"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "/network-instances/network-instance/name",
+          "to": "instance_name"
+        },
+        {
+          "type": 0,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/neighbor-address",
+          "to": "neighbor_address"
+        },
+        {
+          "type": 0,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/afi-safi-name",
+          "to": "neighbor_afi_safi_name"
+        },
+        {
+          "type": 0,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/afi-safi-name",
+          "to": "peer_group_afi_safi_name"
+        },
+        {
+          "type": 0,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/peer-group-name",
+          "to": "peer_group_name"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/total-paths",
+          "to": "global_total_paths"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/total-prefixes",
+          "to": "global_total_prefixes"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/global/state/as",
+          "to": "global_as"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/state/total-paths",
+          "to": "group_total_paths"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/state/total-prefixes",
+          "to": "group_total_prefixes"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/total-paths",
+          "to": "group_safi_total_paths"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/total-prefixes",
+          "to": "group_safi_total_prefixes"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/accepted",
+          "to": "group_safi_accepted"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/installed",
+          "to": "group_safi_installed"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/received",
+          "to": "group_safi_received"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/peer-groups/peer-group/afi-safis/afi-safi/state/prefixes/sent",
+          "to": "group_safi_sent"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/accepted",
+          "to": "safi_accepted"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/installed",
+          "to": "safi_installed"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/received-pre-policy",
+          "to": "safi_received_pre_policy"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/received",
+          "to": "safi_received"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/rejected",
+          "to": "safi_rejected"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/afi-safis/afi-safi/state/prefixes/sent",
+          "to": "safi_sent"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues/input",
+          "to": "session_input_queue"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/queues/output",
+          "to": "session_output_queue"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/session-state",
+          "to": "session_state"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/peer-as",
+          "to": "session_peer_as"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/description",
+          "to": "session_description"
+        },
+        {
+          "type": 0,
+          "from": "/interfaces/interface/name",
+          "to": "if_name"
+        },
+        {
+          "type": 0,
+          "from": "/interfaces/interface/@name",
+          "to": "if_name"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/in-octets",
+          "to": "in_octets"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/out-octets",
+          "to": "out_octets"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/in-pkts",
+          "to": "in_pkts"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/out-pkts",
+          "to": "out_pkts"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/in-errors",
+          "to": "in_errors"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/out-errors",
+          "to": "out_errors"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/in-multicast-pkts",
+          "to": "mcast_in_pkts"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/in-drops",
+          "to": "in_drops"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/counters/out-drops",
+          "to": "out_drops"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/admin-status",
+          "to": "if_admin_status"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/oper-status",
+          "to": "if_oper_status"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/mtu",
+          "to": "if_mtu"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/ifindex",
+          "to": "if_index"
+        },
+        {
+          "type": 1,
+          "from": "/interfaces/interface/state/type",
+          "to": "if_type"
+        }
+      ]
+    },
+    {
+      "order": 110,
+      "namepass": [
+        "SYSTEM",
+        "SYSTEM_MEMORY",
+        "SYSTEM_STORAGE",
+        "ROUTE_SUMMARY"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "/system/processes/process/pid",
+          "to": "process_pid"
+        },
+        {
+          "type": 1,
+          "from": "/system/processes/process/state/name",
+          "to": "process_name"
+        },
+        {
+          "type": 1,
+          "from": "/system/processes/process/state/cpu-utilization",
+          "to": "process_cpu_utilization"
+        },
+        {
+          "type": 1,
+          "from": "system-memory-total",
+          "to": "mem_total_kb"
+        },
+        {
+          "type": 1,
+          "from": "system-memory-active",
+          "to": "mem_active_kb"
+        },
+        {
+          "type": 1,
+          "from": "system-memory-free",
+          "to": "mem_free_kb"
+        },
+        {
+          "type": 0,
+          "from": "mounted-on",
+          "to": "mount_point"
+        },
+        {
+          "type": 1,
+          "from": "used-percent",
+          "to": "storage_used_pct"
+        },
+        {
+          "type": 1,
+          "from": "filesystem-name",
+          "to": "filesystem_name"
+        },
+        {
+          "type": 0,
+          "from": "table-name",
+          "to": "table_name"
+        },
+        {
+          "type": 1,
+          "from": "destination-count",
+          "to": "rt_destinations"
+        },
+        {
+          "type": 1,
+          "from": "total-route-count",
+          "to": "rt_total"
+        },
+        {
+          "type": 1,
+          "from": "active-route-count",
+          "to": "rt_active"
+        },
+        {
+          "type": 1,
+          "from": "hidden-route-count",
+          "to": "rt_hidden"
+        }
+      ]
+    }
+  ],
+  "filtering_list": [
+    {
+      "order": 150,
+      "namepass": [
+        "INTERFACES"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "if_name",
+          "pattern": "^(eth|lo).*",
+          "action": "accept"
+        }
+      ]
+    },
+    {
+      "order": 150,
+      "namepass": [
+        "SYSTEM_STORAGE"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "mount_point",
+          "pattern": "^/$",
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "enrichment_list": [
+    {
       "order": 200,
-      "namepass": ["NETWORK_INSTANCE_BGP"],
+      "namepass": [
+        "NETWORK_INSTANCE_BGP"
+      ],
       "family": "crpd",
       "two_levels": false,
       "level1_tag": "device"
     },
     {
       "order": 210,
-      "namepass": ["INTERFACES"],
+      "namepass": [
+        "INTERFACES"
+      ],
       "family": "crpd",
       "two_levels": true,
       "level1_tag": "device",
-      "level2_tags": ["if_name"]
+      "level2_tags": [
+        "if_name"
+      ]
+    },
+    {
+      "order": 220,
+      "namepass": [
+        "SYSTEM",
+        "SYSTEM_MEMORY",
+        "SYSTEM_STORAGE",
+        "ROUTE_SUMMARY"
+      ],
+      "family": "crpd",
+      "two_levels": false,
+      "level1_tag": "device"
     }
   ],
-  "regex_list": [{
-    "order": 300,
-    "namepass": ["NETWORK_INSTANCE_BGP"],
-    "entries": [{
-      "type": 1,
-      "pattern": ".*prefix-limit-received.state.(max-prefixes)",
-      "replacement": "${1}"
-    }]
-  }],
-  "rate_list": [{
-    "order": 500,
-    "namepass": ["INTERFACES"],
-    "fields": ["in_pkts", "out_pkts", "in_octets", "out_octets", "mcast_in_pkts", "in_errors", "out_errors", "in_drops", "out_drops"]
-  }],
-  "monitoring_list": [{
-    "order": 600,
-    "namepass": ["INTERFACES"],
-    "probes": [{
-        "name": "ETH_DROP_IN",
-        "field": "in_errors_rate",
-        "type": "current",
-        "threshold": 1,
-        "operator": "gt",
-        "tags": ["device", "SHORTNAME", "if_name", "LINKNAME"]
-      },
-      {
-        "name": "ETH_DROP_OUT",
-        "field": "out_errors_rate",
-        "type": "current",
-        "threshold": 1,
-        "operator": "gt",
-        "tags": ["device", "SHORTNAME", "if_name", "LINKNAME"]
-      }
-    ]
-  }],
-  "influx_outputs": [{
-    "retention": "autogen",
-    "fieldpass": [
-      "global_total_paths",
-      "global_total_prefixes",
-      "group_total_paths",
-      "group_total_prefixes",
-      "global_as",
-      "group_safi_total_paths",
-      "group_safi_total_prefixes",
-      "group_safi_accepted",
-      "group_safi_installed",
-      "group_safi_received",
-      "group_safi_sent",
-      "safi_accepted",
-      "safi_installed",
-      "safi_received_pre_policy",
-      "safi_received",
-      "safi_rejected",
-      "safi_sent",
-      "session_input_queue",
-      "session_output_queue",
-      "session_state",
-      "session_peer_as",
-      "session_description",
-      "max-prefixes",
-      "exception",
-      "in_octets_rate",
-      "out_octets_rate",
-      "in_pkts_rate",
-      "out_pkts_rate",
-      "in_errors_rate",
-      "out_errors_rate",
-      "in_drops_rate",
-      "out_drops_rate",
-      "mcast_in_pkts_rate"
-    ]
-  }]
+  "regex_list": [
+    {
+      "order": 300,
+      "namepass": [
+        "NETWORK_INSTANCE_BGP"
+      ],
+      "entries": [
+        {
+          "type": 1,
+          "pattern": ".*prefix-limit-received.state.(max-prefixes)",
+          "replacement": "${1}"
+        }
+      ]
+    }
+  ],
+  "strings_list": [
+    {
+      "order": 400,
+      "namepass": [
+        "INTERFACES"
+      ],
+      "entries": [
+        {
+          "type": 1,
+          "method": 0,
+          "data": "if_admin_status"
+        },
+        {
+          "type": 1,
+          "method": 0,
+          "data": "if_oper_status"
+        }
+      ]
+    }
+  ],
+  "rate_list": [
+    {
+      "order": 500,
+      "namepass": [
+        "INTERFACES"
+      ],
+      "fields": [
+        "in_pkts",
+        "out_pkts",
+        "in_octets",
+        "out_octets",
+        "mcast_in_pkts",
+        "in_errors",
+        "out_errors",
+        "in_drops",
+        "out_drops"
+      ]
+    }
+  ],
+  "monitoring_list": [
+    {
+      "order": 600,
+      "namepass": [
+        "INTERFACES"
+      ],
+      "probes": [
+        {
+          "name": "ETH_DROP_IN",
+          "field": "in_errors_rate",
+          "type": "current",
+          "threshold": 1,
+          "operator": "gt",
+          "tags": [
+            "device",
+            "SHORTNAME",
+            "if_name",
+            "LINKNAME"
+          ]
+        },
+        {
+          "name": "ETH_DROP_OUT",
+          "field": "out_errors_rate",
+          "type": "current",
+          "threshold": 1,
+          "operator": "gt",
+          "tags": [
+            "device",
+            "SHORTNAME",
+            "if_name",
+            "LINKNAME"
+          ]
+        }
+      ]
+    }
+  ],
+  "influx_outputs": [
+    {
+      "retention": "autogen",
+      "fieldpass": [
+        "global_total_paths",
+        "global_total_prefixes",
+        "group_total_paths",
+        "group_total_prefixes",
+        "global_as",
+        "group_safi_total_paths",
+        "group_safi_total_prefixes",
+        "group_safi_accepted",
+        "group_safi_installed",
+        "group_safi_received",
+        "group_safi_sent",
+        "safi_accepted",
+        "safi_installed",
+        "safi_received_pre_policy",
+        "safi_received",
+        "safi_rejected",
+        "safi_sent",
+        "session_input_queue",
+        "session_output_queue",
+        "session_state",
+        "session_peer_as",
+        "session_description",
+        "max-prefixes",
+        "exception",
+        "in_octets_rate",
+        "out_octets_rate",
+        "in_pkts_rate",
+        "out_pkts_rate",
+        "in_errors_rate",
+        "out_errors_rate",
+        "in_drops_rate",
+        "out_drops_rate",
+        "mcast_in_pkts_rate",
+        "if_admin_status",
+        "if_oper_status",
+        "if_mtu",
+        "if_index",
+        "if_type",
+        "process_cpu_utilization",
+        "mem_total_kb",
+        "mem_active_kb",
+        "mem_free_kb",
+        "storage_used_pct",
+        "filesystem_name",
+        "rt_destinations",
+        "rt_total",
+        "rt_active",
+        "rt_hidden"
+      ]
+    }
+  ],
+  "netconf_inputs": [
+    {
+      "subscriptions": [
+        {
+          "name": "SYSTEM_MEMORY",
+          "rpc": "<get-system-memory-information></get-system-memory-information>",
+          "fields": [
+            {
+              "field_path": "/system-memory-information/system-memory-summary-information/system-memory-total",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/system-memory-information/system-memory-summary-information/system-memory-active",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/system-memory-information/system-memory-summary-information/system-memory-free",
+              "field_type": "int"
+            }
+          ],
+          "interval": 60
+        },
+        {
+          "name": "SYSTEM_STORAGE",
+          "rpc": "<get-system-storage></get-system-storage>",
+          "fields": [
+            {
+              "field_path": "/system-storage-information/filesystem[mounted-on]/used-percent",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/system-storage-information/filesystem[mounted-on]/filesystem-name",
+              "field_type": "string"
+            }
+          ],
+          "interval": 60
+        },
+        {
+          "name": "ROUTE_SUMMARY",
+          "rpc": "<get-route-summary-information></get-route-summary-information>",
+          "fields": [
+            {
+              "field_path": "/route-summary-information/route-table[table-name]/destination-count",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/route-summary-information/route-table[table-name]/total-route-count",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/route-summary-information/route-table[table-name]/active-route-count",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/route-summary-information/route-table[table-name]/hidden-route-count",
+              "field_type": "int"
+            }
+          ],
+          "interval": 60
+        }
+      ]
+    }
+  ],
+  "converter_list": [
+    {
+      "order": 180,
+      "namepass": [
+        "SYSTEM"
+      ],
+      "tag_type": [
+        "process_name"
+      ]
+    }
+  ]
 }

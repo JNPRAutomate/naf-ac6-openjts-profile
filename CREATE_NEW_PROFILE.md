@@ -192,6 +192,11 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 - Panels use the OpenJTS InfluxDB datasource (`"uid": "jtsuid"`).
 - Queries use the **measurement names** (`INTERFACES`, `NETWORK_INSTANCE_BGP`) and the **renamed** tags/fields (`if_name`, `if_mtu`, `device`, `SHORTNAME`, …). Influx names are **case-sensitive**.
 - The dashboard has its own `uid` and `title` (`naf-profile` / `NAF PROFILE`).
+- The top-level `"id"` is **`null`**. A dashboard exported from Grafana carries its internal database ID, for example `"id": 97`. If that dashboard is later deleted, provisioning fails silently, and Grafana shows "Dashboard not found / invalid UID".
+- The dashboard **filename is unique** to the profile and is never reused for a different dashboard. Grafana links each file path to one dashboard. If you reuse a name, for example by shipping a copied BGP dashboard as `dashboard-naf.json`, the new dashboard is never loaded. To recover, rename the file and update the `grafana` list in `definition.json`.
+- Panels that show raw numbers (MTU, ifIndex, …) use unit **`none`**. With `bytes`, Grafana displays 9500 as `9 KiB`.
+
+> **Don't save changes to a profile dashboard from the Grafana UI.** Saving from the UI, or importing a dashboard with the same `uid`, creates a separate database copy. Grafana keeps showing that copy and ignores the profile file, so your later profile updates never appear. Edit the JSON in the profile instead (or export from Grafana, then set `"id": null`) and redeploy the `.tgz`. If a UI copy already exists, delete it (`curl -X DELETE http://<host>:<grafana-port>/api/dashboards/uid/<uid>`). Then redeploy, because Grafana only re-reads a file when its timestamp changes.
 
 ---
 

@@ -18,85 +18,768 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 97,
+  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Device health",
+      "type": "row"
+    },
     {
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
+      "description": "Junos release, family and model come from the JTSO metadata enrichment (no extra sensor needed).",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
-          "mappings": [
-            {
-              "options": {
-                "down": {
-                  "color": "red",
-                  "index": 1,
-                  "text": "DOWN"
-                },
-                "up": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "UP"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange",
+                "color": "green",
                 "value": null
               }
             ]
-          },
-          "unitScale": true
+          }
         },
         "overrides": []
       },
       "gridPos": {
         "h": 5,
-        "w": 16,
+        "w": 24,
         "x": 0,
-        "y": 0
+        "y": 1
       },
-      "id": 1,
+      "id": 21,
       "options": {
-        "colorMode": "background",
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Device"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"if_mtu\") AS \"x\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"FAMILY\", \"MODEL\", \"VERSION\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Device inventory",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "x": true
+            },
+            "indexByName": {
+              "SHORTNAME": 0,
+              "device": 1,
+              "FAMILY": 2,
+              "MODEL": 3,
+              "VERSION": 4
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "device": "Mgmt IP",
+              "FAMILY": "Family",
+              "MODEL": "Model",
+              "VERSION": "Junos release"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "cRPD: NETCONF get-system-memory-information (active/total, host memory). cSRX: SPU memory from 'show security monitoring'.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "id": 22,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"mem_active_kb\") / last(\"mem_total_kb\") * 100 FROM \"SYSTEM_MEMORY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME"
+        },
+        {
+          "alias": "$tag_SHORTNAME (SPU)",
+          "query": "SELECT last(\"spu_mem_pct\") FROM \"SECURITY_SPU\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Memory used",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-system-storage, mount point /. cRPD/cSRX run as containers: memory and disk values reflect the host they run on.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
+      "id": 23,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "orientation": "auto"
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"storage_used_pct\") FROM \"SYSTEM_STORAGE\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME"
+        }
+      ],
+      "title": "Disk used (/)",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-flow-session-information summary.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "unitScale": false,
+          "decimals": 0,
+          "mappings": [],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*Failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "id": 24,
+      "options": {
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
+        "textMode": "value_and_name",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/.*/",
+          "fields": "/^(?!Time$).*/",
           "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "value_and_name",
-        "wideLayout": true
+        }
       },
-      "pluginVersion": "10.3.1",
       "targets": [
         {
-          "alias": "$tag_SHORTNAME $tag_if_name",
-          "query": "SELECT last(\"if_oper_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"if_name\"",
+          "query": "SELECT last(\"flow_active_sessions\") AS \"Active\", last(\"flow_failed_sessions\") AS \"Failed\", last(\"flow_max_sessions\") AS \"Max\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME $col"
+        }
+      ],
+      "title": "Flow sessions (cSRX)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "cRPD: sum of cpu-utilization of all processes (gNMI /system/processes). cSRX: SPU CPU from 'show security monitoring' (data plane).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0,
+          "unit": "percent",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "query": "SELECT sum(\"c\") FROM (SELECT mean(\"process_cpu_utilization\") AS \"c\" FROM \"SYSTEM\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"process_pid\") WHERE $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME"
+        },
+        {
+          "alias": "$tag_SHORTNAME (SPU)",
+          "query": "SELECT mean(\"spu_cpu_pct\") FROM \"SECURITY_SPU\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
+          "rawQuery": true,
+          "refId": "C",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "CPU total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-system-memory-information. cRPD/cSRX run as containers: memory and disk values reflect the host they run on.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0,
+          "unit": "bytes",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "query": "SELECT mean(\"mem_active_kb\") * 1024 AS \"active\", mean(\"mem_free_kb\") * 1024 AS \"free\" FROM \"SYSTEM_MEMORY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME $col"
+        }
+      ],
+      "title": "Memory (cRPD)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-route-summary-information.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hidden"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Device"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"rt_destinations\") AS \"Destinations\", last(\"rt_total\") AS \"Total routes\", last(\"rt_active\") AS \"Active\", last(\"rt_hidden\") AS \"Hidden\" FROM \"ROUTE_SUMMARY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"table_name\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Routing tables (cRPD)",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "SHORTNAME": 0,
+              "table_name": 1
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "table_name": "Table"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-flow-session-information summary.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0,
+          "unit": "none",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "query": "SELECT mean(\"flow_active_sessions\") AS \"active\", mean(\"flow_failed_sessions\") AS \"failed\", mean(\"flow_active_drop_sessions\") AS \"drop\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME $col"
+        }
+      ],
+      "title": "Flow sessions over time (cSRX)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-flow-statistics-all, converted to rates by the Telegraf rate processor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0,
+          "unit": "pps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*drop"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $col",
+          "query": "SELECT mean(\"flow_pkts_rx_rate\") AS \"rx\", mean(\"flow_pkts_tx_rate\") AS \"tx\", mean(\"flow_pkts_fwd_rate\") AS \"fwd\", mean(\"flow_pkts_drop_rate\") AS \"drop\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
         }
       ],
-      "title": "Interface operational status",
-      "type": "stat"
+      "title": "Flow packets (cSRX)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "id": 29,
+      "panels": [],
+      "title": "Interfaces",
+      "type": "row"
     },
     {
       "datasource": {
@@ -124,16 +807,16 @@
               }
             ]
           },
-          "unit": "bytes",
-          "unitScale": true
+          "unit": "none",
+          "unitScale": false
         },
         "overrides": []
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 0
+        "w": 24,
+        "x": 0,
+        "y": 35
       },
       "id": 2,
       "options": {
@@ -220,7 +903,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 40
       },
       "id": 3,
       "options": {
@@ -248,6 +931,91 @@
         }
       ],
       "title": "Operational status over time",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 70,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "down": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "DOWN"
+                },
+                "up": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 14,
+      "options": {
+        "alignValue": "center",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "showValue": "auto",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $tag_if_name",
+          "query": "SELECT last(\"if_admin_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Admin status over time",
       "type": "state-timeline"
     },
     {
@@ -321,7 +1089,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 54
       },
       "id": 4,
       "options": {
@@ -345,7 +1113,7 @@
       "pluginVersion": "10.3.1",
       "targets": [
         {
-          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
+          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\", last(\"if_type\") AS \"Type\", last(\"if_index\") AS \"ifIndex\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table"
@@ -368,13 +1136,547 @@
               "MTU": 5,
               "Oper": 4,
               "SHORTNAME": 0,
-              "Time": 6,
+              "Time": 8,
+              "device": 1,
+              "if_name": 2,
+              "Type": 6,
+              "ifIndex": 7
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "Time": "Last seen",
+              "device": "Mgmt IP",
+              "if_name": "Interface"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      },
+      "id": 9,
+      "panels": [],
+      "title": "Traffic counters (gNMI - cRPD)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "legend": {
+              "showLegend": true
+            }
+          },
+          "min": 0,
+          "unit": "bps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 63
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $tag_if_name $col",
+          "query": "SELECT mean(\"in_octets_rate\")*8 AS \"in\", mean(\"out_octets_rate\")*8 AS \"out\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "legend": {
+              "showLegend": true
+            }
+          },
+          "min": 0,
+          "unit": "pps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 63
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $tag_if_name $col",
+          "query": "SELECT mean(\"in_pkts_rate\") AS \"in\", mean(\"out_pkts_rate\") AS \"out\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Packets",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "legend": {
+              "showLegend": true
+            }
+          },
+          "min": 0,
+          "unit": "pps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 71
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $tag_if_name $col",
+          "query": "SELECT mean(\"in_errors_rate\") AS \"in_errors\", mean(\"out_errors_rate\") AS \"out_errors\", mean(\"in_drops_rate\") AS \"in_drops\", mean(\"out_drops_rate\") AS \"out_drops\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Errors & drops",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "legend": {
+              "showLegend": true
+            }
+          },
+          "min": 0,
+          "unit": "pps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 71
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_SHORTNAME $tag_if_name $col",
+          "query": "SELECT mean(\"mcast_in_pkts_rate\") AS \"mcast_in\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "title": "Multicast in",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 79
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Drift: admin up / oper down",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Interfaces configured up (admin) but not operationally up.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 80
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^if_name$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"if_name\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Interfaces in drift",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "up"
+                  }
+                },
+                "fieldName": "Admin"
+              },
+              {
+                "config": {
+                  "id": "notEqual",
+                  "options": {
+                    "value": "up"
+                  }
+                },
+                "fieldName": "Oper"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No drift: every admin-up interface is oper-up"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Admin|Oper"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "down": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "DOWN"
+                      },
+                      "up": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "UP"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 18,
+        "x": 6,
+        "y": 80
+      },
+      "id": 12,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Drifted interfaces",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "up"
+                  }
+                },
+                "fieldName": "Admin"
+              },
+              {
+                "config": {
+                  "id": "notEqual",
+                  "options": {
+                    "value": "up"
+                  }
+                },
+                "fieldName": "Oper"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Admin": 3,
+              "MTU": 5,
+              "Oper": 4,
+              "SHORTNAME": 0,
               "device": 1,
               "if_name": 2
             },
             "renameByName": {
               "SHORTNAME": "Device",
-              "Time": "Last seen",
               "device": "Mgmt IP",
               "if_name": "Interface"
             }
@@ -461,6 +1763,6 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 4,
+  "version": 13,
   "weekStart": ""
 }
