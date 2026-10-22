@@ -206,11 +206,14 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 
 ```bash
 cd ~/jts_custom_profiles
-tar czvf naf.tgz naf/                       # archive name = folder name
+# archive name = folder name; list only the profile files (no backups, notes or tokens)
+tar czvf naf.tgz naf/definition.json naf/crpd_naf.json naf/csrx_naf.json naf/dashboard-naf.json
 cp naf.tgz ~/JTS/compose/jtso/profiles/
 ```
 
-Then follow the JTSO log on the host:
+> Use `tar czvf` (the `z` matters). An archive made with `tar cf` is not gzipped, and JTSO rejects it with `Unable to extract new profile naf: gzip: invalid header`.
+
+Then follow the JTSO log on the host (see [Read the JTSO log](#read-the-jtso-log) for the messages to expect):
 
 ```bash
 tail -f /var/log/jtso.log
@@ -221,6 +224,8 @@ Within about a minute you should see that the new profile was detected, or that 
 ### Assign the profile
 
 In the JTSO portal go to **Profiles → Associations** and add `naf` to the cRPD and cSRX routers. Saving triggers a stack reconfiguration. Click the green **file** icon to view the generated Telegraf TOML. You can also find it on disk under `JTS/compose/telegraf/<family>/telegraf.d/`.
+
+A router's profile list can't be edited in place. If the router already has profiles (for example `bgp`), adding `naf` fails with `Router <name> is already assigned to a profile`. **Delete** the router's association, then **add** it again with every profile selected (for example `bgp` + `naf`). The router collects nothing between the two steps, so do them back to back.
 
 The profile's dashboard then shows up in Grafana (OpenJTS folder).
 
@@ -246,15 +251,57 @@ SHOW FIELD KEYS FROM INTERFACES
 
 Allow a sampling interval or two (about 30–60 s) after the association before data appears.
 
+### Read the JTSO log
+
+JTSO writes its log on the **host** at `/var/log/jtso.log`. The JTSO container mounts the host's `/var/log`, so you don't need `docker exec`. JTSO scans `compose/jtso/profiles/` about once a minute.
+
+```bash
+tail -f /var/log/jtso.log                         # follow live
+grep -E "naf|ERROR" /var/log/jtso.log | tail -30  # recent profile events and errors
+```
+
+**Normal sequence after copying a new or updated `.tgz`:**
+
+```text
+[INFO] New profile naf detected and added to active profiles    ← first time
+[INFO] Profile naf has been updated                             ← later versions (archive content changed)
+[INFO] Time to reconfigure JTS components for family crpd
+[INFO]  Family: crpd
+[INFO]      Profiles [files]:
+[INFO]        -naf [crpd_naf.json]                               ← definition.json picked this file for the family
+[INFO] Active dashboard dashboard-naf.json for profile naf      ← dashboard copied to Grafana
+[INFO] telegraf_crpd container has been restarted
+[INFO] All JTS components reconfigured for family crpd
+```
+
+After you change an association, you should also see `Profile(s) of router <name> has been successfully updated` or `Profile of router <name> has been successfully deleted`.
+
+**Messages that point to a problem:**
+
+| Message | Meaning / fix |
+|---------|---------------|
+| `Unable to extract new profile <name>: gzip: invalid header` | The archive isn't gzipped. Rebuild it with `tar czvf`. |
+| `Unable to open defintion.json for profile <name>` | The archive doesn't contain `<name>/definition.json`. Check that the folder name matches the archive name. |
+| `Unable to parse defintion.json for profile <name>` | `definition.json` is invalid JSON. Check it with `python3 -m json.tool definition.json`. |
+| `Router <name> is already assigned to a profile` | Delete the router's association and add it again with all profiles (see [Assign the profile](#assign-the-profile)). |
+| `Unable to open the source dashboard <file>` | The `grafana` list in `definition.json` names a file that isn't in the archive. |
+| `telegraf_<family> container has been stopped - no router to collect` | Normal for families with no assigned router. If it's *your* family, no router of that family is assigned yet. |
+| No `-<profile> [<file>.json]` line under your `Family:` | `definition.json` has no entry for that family. Telegraf then collects nothing from the profile for those routers. |
+
+> The log shows only **JTSO** events: archive extraction, config generation, container restarts. Errors from the actual collection (gNMI/NETCONF connections, wrong paths or RPCs) appear in the Telegraf debug log `/var/log/debugtelegraf_<family>.log`, described below.
+>
+> On cRPD/cSRX you may also see JTSO's own inventory collection log `[WARNING] ... Unable to parse ISIS Overview` or `No LACP Interface information`. These come from metadata RPCs that container platforms don't support, and they don't affect the profile.
+
 ### Where to look when nothing shows up
 
 | Check | How |
 |-------|-----|
-| Profile detected/extracted? | `tail -f /var/log/jtso.log` (errors like `Unable to parse defintion.json` point to invalid JSON) |
+| Profile detected/extracted? | `/var/log/jtso.log`. See [Read the JTSO log](#read-the-jtso-log) for the expected messages and common errors. |
 | Telegraf config generated for the family? | `ls ~/JTS/compose/telegraf/csrx/telegraf.d/` and `cat` the `csrx_collection_*.conf` file |
 | Telegraf container running? | `sudo docker ps \| grep telegraf_csrx`. A Telegraf container starts only if at least one router is assigned to that family. |
 | Collection errors (auth, RPC, paths)? | Enable **Debug** (the "D" button on the Telegraf container in the JTSO main page), then `tail -f /var/log/debugtelegraf_<family>.log` (for example `debugtelegraf_csrx.log`). Disable it afterwards, because debug logs grow fast. |
 | gNMI `connection refused` / `no route to host` in the debug log? | The device isn't serving gNMI on the port JTSO uses. JTSO reads the port from `JTS/compose/jtso/config.yml` (`gnmi.port`, 9339 by default), and the same port applies to all devices. Make the device listen on it (`set system services extension-service request-response grpc clear-text port 9339`), then test with `gnmic -a <ip>:9339 --insecure -u <user> -p <pwd> capabilities`. |
+| `W! [agent] ["outputs.influxdb"] did not complete within its flush interval` in the debug log? | Harmless, and no data is lost. InfluxDB waits up to 10s before fsyncing writes (`wal-fsync-delay = "10s"` in `compose/influxdb/influxdb.conf`), which is longer than Telegraf's default `flush_interval` of 5s. To silence it, raise `flush_interval` above 10s (for example 15s) in JTSO **Settings → Telegraf tuning**. Only worry if you also see `buffer overflow` / dropped metrics. |
 | Field missing in the DB? | It's probably not listed in `influx_outputs.fieldpass`, or the `rename_list` `from` doesn't match the raw name. Check the raw names in the debug log. |
 | Router in the wrong family? | Check the router's family in JTSO. It must match a family key in `definition.json` (`csrx`, not `crpd`). |
 
