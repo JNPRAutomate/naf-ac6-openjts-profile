@@ -394,6 +394,34 @@
           "to": "rt_hidden"
         }
       ]
+    },
+    {
+      "order": 120,
+      "namepass": [
+        "COMMIT"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "sequence-number",
+          "to": "commit_seq"
+        },
+        {
+          "type": 1,
+          "from": "date-time",
+          "to": "commit_epoch"
+        },
+        {
+          "type": 1,
+          "from": "user",
+          "to": "commit_user"
+        },
+        {
+          "type": 1,
+          "from": "client",
+          "to": "commit_client"
+        }
+      ]
     }
   ],
   "filtering_list": [
@@ -421,6 +449,20 @@
           "type": 0,
           "key": "mount_point",
           "pattern": "^/$",
+          "action": "accept"
+        }
+      ]
+    },
+    {
+      "order": 150,
+      "namepass": [
+        "COMMIT"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "commit_seq",
+          "pattern": "^0$",
           "action": "accept"
         }
       ]
@@ -454,7 +496,8 @@
         "SYSTEM",
         "SYSTEM_MEMORY",
         "SYSTEM_STORAGE",
-        "ROUTE_SUMMARY"
+        "ROUTE_SUMMARY",
+        "COMMIT"
       ],
       "family": "crpd",
       "two_levels": false,
@@ -616,7 +659,10 @@
         "rt_destinations",
         "rt_total",
         "rt_active",
-        "rt_hidden"
+        "rt_hidden",
+        "commit_epoch",
+        "commit_user",
+        "commit_client"
       ]
     }
   ],
@@ -676,6 +722,25 @@
             {
               "field_path": "/route-summary-information/route-table[table-name]/hidden-route-count",
               "field_type": "int"
+            }
+          ],
+          "interval": 60
+        },
+        {
+          "name": "COMMIT",
+          "rpc": "<get-commit-information></get-commit-information>",
+          "fields": [
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/date-time",
+              "field_type": "epoch"
+            },
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/user",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/client",
+              "field_type": "string"
             }
           ],
           "interval": 60

@@ -12,7 +12,9 @@
       "conf": "csrx_naf.json"
     }]
   },
-  "kapacitor": null,
+  "kapacitor": [
+    "commit_change.tick"
+  ],
   "grafana": [
     "dashboard-naf.json"
   ]

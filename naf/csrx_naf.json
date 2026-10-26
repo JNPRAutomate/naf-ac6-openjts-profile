@@ -108,6 +108,25 @@
             }
           ],
           "interval": 30
+        },
+        {
+          "name": "COMMIT",
+          "rpc": "<get-commit-information></get-commit-information>",
+          "fields": [
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/date-time",
+              "field_type": "epoch"
+            },
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/user",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/commit-information/commit-history[sequence-number]/client",
+              "field_type": "string"
+            }
+          ],
+          "interval": 60
         }
       ]
     }
@@ -235,6 +254,34 @@
           "to": "flow_pkts_drop"
         }
       ]
+    },
+    {
+      "order": 120,
+      "namepass": [
+        "COMMIT"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "sequence-number",
+          "to": "commit_seq"
+        },
+        {
+          "type": 1,
+          "from": "date-time",
+          "to": "commit_epoch"
+        },
+        {
+          "type": 1,
+          "from": "user",
+          "to": "commit_user"
+        },
+        {
+          "type": 1,
+          "from": "client",
+          "to": "commit_client"
+        }
+      ]
     }
   ],
   "enrichment_list": [
@@ -252,7 +299,8 @@
       "namepass": [
         "SYSTEM_STORAGE",
         "SECURITY_FLOW",
-        "SECURITY_SPU"
+        "SECURITY_SPU",
+        "COMMIT"
       ],
       "family": "csrx",
       "two_levels": false,
@@ -280,7 +328,10 @@
         "flow_pkts_rx_rate",
         "flow_pkts_tx_rate",
         "flow_pkts_fwd_rate",
-        "flow_pkts_drop_rate"
+        "flow_pkts_drop_rate",
+        "commit_epoch",
+        "commit_user",
+        "commit_client"
       ]
     }
   ],
@@ -295,6 +346,20 @@
           "type": 0,
           "key": "mount_point",
           "pattern": "^/$",
+          "action": "accept"
+        }
+      ]
+    },
+    {
+      "order": 150,
+      "namepass": [
+        "COMMIT"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "commit_seq",
+          "pattern": "^0$",
           "action": "accept"
         }
       ]

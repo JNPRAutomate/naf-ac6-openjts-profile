@@ -21,6 +21,7 @@ A profile is a **`.tgz` archive** that contains **one folder with the same name 
 | `crpd_naf.json` | Telegraf template for the **crpd** family (gNMI paths) |
 | `csrx_naf.json` | Telegraf template for the **csrx** family (NETCONF RPC + XPaths) |
 | `dashboard-naf.json` | Grafana dashboard installed when the profile is used |
+| `commit_change.tick` | Kapacitor TICKscript that alerts when a device's latest commit timestamp changes |
 
 ```bash
 ls -lart naf/
@@ -62,7 +63,7 @@ input (gNMI / NETCONF) → rename → filtering → enrichment → regex → rat
     "crpd": [{ "version": "all", "conf": "crpd_naf.json" }],
     "csrx": [{ "version": "all", "conf": "csrx_naf.json" }]
   },
-  "kapacitor": null,
+  "kapacitor": ["commit_change.tick"],
   "grafana": ["dashboard-naf.json"]
 }
 ```
@@ -70,7 +71,32 @@ input (gNMI / NETCONF) → rename → filtering → enrichment → regex → rat
 - **`telegraf`**: one key per device family (`mx`, `ptx`, `acx`, `ex`, `qfx`, `srx`, `crpd`, `cptx`, `csrx`, `vmx`, `vsrx`, `vjunos`, `vevo`). Each family takes a list of `{version, conf}` entries:
   - `"all"` is the fallback for any Junos version.
   - You can also target versions, for example `">=24.2"` or `"==23"`. A version-specific entry wins over `"all"`.
-- **`kapacitor`**: Kapacitor alerting scripts. The NAF profile has none, so it is `null`.
+- **`kapacitor`**: list of TICKscript files in the profile folder (or `null`/`[]` for none). JTSO installs each one as a Kapacitor **stream** task named `jts_tick_<n>` on `jtsdb.autogen`, and removes it when no router uses the profile anymore. The NAF profile ships `commit_change.tick`. See [Kapacitor alerting](#kapacitor-alerting-commit-change).
+
+### Kapacitor alerting (commit change)
+
+Both `crpd_naf.json` and `csrx_naf.json` poll `<get-commit-information>` over NETCONF every 60 s into the `COMMIT` measurement:
+
+- `commit-history[sequence-number]` becomes the tag `commit_seq`. Only `commit_seq = 0` (the latest commit) is kept, so a device writes one point per poll instead of up to 50.
+- `date-time` uses the `epoch` field type. The plugin's `time_layout` (`2006-01-02 15:04:05 MST`) parses Junos `2026-10-22 14:19:11 UTC` into Unix seconds, stored as `commit_epoch`. `user` and `client` are stored as `commit_user` and `commit_client`.
+
+`commit_change.tick` groups the points by `device`, runs `difference('commit_epoch')` and raises an `INFO` alert when the difference is not 0. Because `difference()` only outputs the computed field, the script joins the result back with the original point so it can include the user and client in the alert. Each new commit produces one alert. That alert is:
+
+- appended to `/var/lib/kapacitor/alerts.log` inside the container (`~/JTS/compose/kapacitor/data/alerts.log` on the host);
+- written back to InfluxDB as measurement `COMMIT_ALERT`, which you can use in Grafana panels or annotations.
+
+The dashboard's **Latest commit** table (below *Device inventory*) shows one row per device with the commit time (`commit_epoch * 1000`, unit `dateTimeAsIso`), its age (`dateTimeFromNow`), the user and the client. Rows are sorted with the most recent commit first.
+
+To get Slack, email, webhook or similar notifications, add a handler to the `|alert()` node, for example `.post('http://...')` or `.slack()` once Slack is configured in `kapacitor.conf`. Because polling runs every 60 s, there is up to 60 s of delay, and several commits made within one poll interval produce a single alert. The first point after the task starts is used as the baseline and never alerts.
+
+> **JTSO v1.2.3 bug: duplicate tasks.** JTSO queues the TICKscript once **per router** that uses the profile, instead of once per script. With pe1, pe2 and the cSRX, you get 3 identical tasks (`jts_tick_0..2`), which means 3 alerts per commit. JTSO only keeps track of the last task, so the others are never removed. After each deployment, and after each JTSO restart (JTSO wipes and recreates all tasks at startup), remove the extra tasks and keep the highest-numbered one:
+>
+> ```bash
+> docker exec kapacitor kapacitor -url http://localhost:9292 list tasks
+> docker exec kapacitor kapacitor -url http://localhost:9292 delete tasks jts_tick_0 jts_tick_1
+> ```
+>
+> The upstream fix is a one-line change in `association/stackconfig.go`: only append to `kapaStart` when `!found && to_add`.
 - **`grafana`**: dashboard file(s) to install.
 
 ---
@@ -207,7 +233,7 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 ```bash
 cd ~/jts_custom_profiles
 # archive name = folder name; list only the profile files (no backups, notes or tokens)
-tar czvf naf.tgz naf/definition.json naf/crpd_naf.json naf/csrx_naf.json naf/dashboard-naf.json
+tar czvf naf.tgz naf/definition.json naf/crpd_naf.json naf/csrx_naf.json naf/dashboard-naf.json naf/commit_change.tick
 cp naf.tgz ~/JTS/compose/jtso/profiles/
 ```
 

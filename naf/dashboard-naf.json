@@ -18,7 +18,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -59,27 +58,29 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": []
       },
       "gridPos": {
         "h": 5,
-        "w": 24,
+        "w": 8,
         "x": 0,
         "y": 1
       },
       "id": 21,
       "options": {
         "cellHeight": "sm",
-        "showHeader": true,
         "footer": {
-          "show": false,
+          "countRows": false,
+          "fields": "",
           "reducer": [
             "sum"
           ],
-          "fields": ""
+          "show": false
         },
+        "showHeader": true,
         "sortBy": [
           {
             "desc": false,
@@ -87,6 +88,7 @@
           }
         ]
       },
+      "pluginVersion": "10.3.1",
       "targets": [
         {
           "query": "SELECT last(\"if_mtu\") AS \"x\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"FAMILY\", \"VERSION\"",
@@ -96,7 +98,6 @@
         }
       ],
       "title": "Device inventory",
-      "type": "table",
       "transformations": [
         {
           "id": "merge",
@@ -110,20 +111,178 @@
               "x": true
             },
             "indexByName": {
-              "SHORTNAME": 0,
-              "device": 1,
               "FAMILY": 2,
-              "VERSION": 3
+              "SHORTNAME": 0,
+              "VERSION": 3,
+              "device": 1
+            },
+            "renameByName": {
+              "FAMILY": "Family",
+              "SHORTNAME": "Device",
+              "VERSION": "Junos release",
+              "device": "Mgmt IP"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Device",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "NETCONF get-commit-information (latest commit, sequence 0). The commit_change.tick Kapacitor task raises an alert when it changes.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last commit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Age"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              },
+              {
+                "id": "custom.width",
+                "value": 161
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "User"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 149
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 16,
+        "x": 8,
+        "y": 1
+      },
+      "id": 31,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Device"
+          }
+        ]
+      },
+      "pluginVersion": "10.3.1",
+      "targets": [
+        {
+          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Last commit\", last(\"commit_epoch\") * 1000 AS \"Age\", last(\"commit_user\") AS \"User\", last(\"commit_client\") AS \"Client\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Latest commit",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Age": 3,
+              "Client": 5,
+              "Last commit": 2,
+              "SHORTNAME": 0,
+              "User": 4,
+              "device": 1
             },
             "renameByName": {
               "SHORTNAME": "Device",
-              "device": "Mgmt IP",
-              "FAMILY": "Family",
-              "VERSION": "Junos release"
+              "device": "Mgmt IP"
             }
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Device",
+                "desc": false
+              }
+            ]
+          }
         }
-      ]
+      ],
+      "type": "table"
     },
     {
       "datasource": {
@@ -133,11 +292,13 @@
       "description": "cRPD: NETCONF get-system-memory-information (active/total, host memory). cSRX: SPU memory from 'show security monitoring'.",
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 1,
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -155,9 +316,8 @@
               }
             ]
           },
-          "color": {
-            "mode": "thresholds"
-          }
+          "unit": "percent",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -169,6 +329,9 @@
       },
       "id": 22,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -178,15 +341,16 @@
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "orientation": "auto"
+        "sizing": "auto"
       },
+      "pluginVersion": "10.3.1",
       "targets": [
         {
+          "alias": "$tag_SHORTNAME",
           "query": "SELECT last(\"mem_active_kb\") / last(\"mem_total_kb\") * 100 FROM \"SYSTEM_MEMORY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME"
+          "resultFormat": "time_series"
         },
         {
           "alias": "$tag_SHORTNAME (SPU)",
@@ -207,11 +371,13 @@
       "description": "NETCONF get-system-storage, mount point /. cRPD/cSRX run as containers: memory and disk values reflect the host they run on.",
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -229,9 +395,8 @@
               }
             ]
           },
-          "color": {
-            "mode": "thresholds"
-          }
+          "unit": "percent",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -243,6 +408,9 @@
       },
       "id": 23,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -252,15 +420,16 @@
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "orientation": "auto"
+        "sizing": "auto"
       },
+      "pluginVersion": "10.3.1",
       "targets": [
         {
+          "alias": "$tag_SHORTNAME",
           "query": "SELECT last(\"storage_used_pct\") FROM \"SYSTEM_STORAGE\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME"
+          "resultFormat": "time_series"
         }
       ],
       "title": "Disk used (/)",
@@ -274,14 +443,12 @@
       "description": "NETCONF get-flow-session-information summary.",
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
-          "unitScale": false,
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
           "decimals": 0,
           "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -290,7 +457,9 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "none",
+          "unitScale": false
         },
         "overrides": [
           {
@@ -336,7 +505,6 @@
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value_and_name",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -344,15 +512,19 @@
           ],
           "fields": "/^(?!Time$).*/",
           "values": false
-        }
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
+      "pluginVersion": "10.3.1",
       "targets": [
         {
+          "alias": "$tag_SHORTNAME $col",
           "query": "SELECT last(\"flow_active_sessions\") AS \"Active\", last(\"flow_failed_sessions\") AS \"Failed\", last(\"flow_max_sessions\") AS \"Max\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME $col"
+          "resultFormat": "time_series"
         }
       ],
       "title": "Flow sessions (cSRX)",
@@ -370,15 +542,39 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
-            "lineWidth": 2,
             "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "never",
-            "spanNulls": true
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
-          "min": 0,
-          "unit": "percent",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -387,7 +583,9 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "percent",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -415,11 +613,11 @@
       },
       "targets": [
         {
+          "alias": "$tag_SHORTNAME",
           "query": "SELECT sum(\"c\") FROM (SELECT mean(\"process_cpu_utilization\") AS \"c\" FROM \"SYSTEM\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"process_name\" !~ /^(ifinfo|python3|ps|sh)$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"process_name\") WHERE $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
           "rawQuery": true,
           "refId": "B",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME"
+          "resultFormat": "time_series"
         },
         {
           "alias": "$tag_SHORTNAME (SPU)",
@@ -444,15 +642,39 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "never",
-            "spanNulls": true
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
-          "min": 0,
-          "unit": "bytes",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -461,7 +683,9 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "bytes",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -489,11 +713,11 @@
       },
       "targets": [
         {
+          "alias": "$tag_SHORTNAME $col",
           "query": "SELECT mean(\"mem_active_kb\") * 1024 AS \"active\", mean(\"mem_free_kb\") * 1024 AS \"free\" FROM \"SYSTEM_MEMORY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME $col"
+          "resultFormat": "time_series"
         }
       ],
       "title": "Memory (cRPD)",
@@ -523,7 +747,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": [
           {
@@ -567,14 +792,15 @@
       "id": 27,
       "options": {
         "cellHeight": "sm",
-        "showHeader": true,
         "footer": {
-          "show": false,
+          "countRows": false,
+          "fields": "",
           "reducer": [
             "sum"
           ],
-          "fields": ""
+          "show": false
         },
+        "showHeader": true,
         "sortBy": [
           {
             "desc": false,
@@ -582,6 +808,7 @@
           }
         ]
       },
+      "pluginVersion": "10.3.1",
       "targets": [
         {
           "query": "SELECT last(\"rt_destinations\") AS \"Destinations\", last(\"rt_total\") AS \"Total routes\", last(\"rt_active\") AS \"Active\", last(\"rt_hidden\") AS \"Hidden\" FROM \"ROUTE_SUMMARY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"table_name\"",
@@ -591,7 +818,6 @@
         }
       ],
       "title": "Routing tables (cRPD)",
-      "type": "table",
       "transformations": [
         {
           "id": "merge",
@@ -612,8 +838,21 @@
               "table_name": "Table"
             }
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Device",
+                "desc": false
+              }
+            ]
+          }
         }
-      ]
+      ],
+      "type": "table"
     },
     {
       "datasource": {
@@ -627,15 +866,40 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "never",
-            "spanNulls": true
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
-          "min": 0,
-          "unit": "none",
+          "decimals": 0,
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -645,7 +909,8 @@
               }
             ]
           },
-          "decimals": 0
+          "unit": "none",
+          "unitScale": true
         },
         "overrides": []
       },
@@ -673,11 +938,11 @@
       },
       "targets": [
         {
+          "alias": "$tag_SHORTNAME $col",
           "query": "SELECT mean(\"flow_active_sessions\") AS \"active\", mean(\"flow_failed_sessions\") AS \"failed\", mean(\"flow_active_drop_sessions\") AS \"drop\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\" fill(none)",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME $col"
+          "resultFormat": "time_series"
         }
       ],
       "title": "Flow sessions over time (cSRX)",
@@ -696,23 +961,22 @@
           },
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
             "fillOpacity": 10,
+            "lineWidth": 1,
             "showPoints": "never",
             "spanNulls": true
           },
-          "min": 0,
-          "unit": "pps",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          }
+          },
+          "unit": "pps"
         },
         "overrides": [
           {
@@ -724,8 +988,8 @@
               {
                 "id": "color",
                 "value": {
-                  "mode": "fixed",
-                  "fixedColor": "red"
+                  "fixedColor": "red",
+                  "mode": "fixed"
                 }
               }
             ]
@@ -796,8 +1060,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -888,8 +1151,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange",
-                "value": null
+                "color": "orange"
               }
             ]
           },
@@ -973,8 +1235,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange",
-                "value": null
+                "color": "orange"
               }
             ]
           },
@@ -1035,8 +1296,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1135,10 +1395,10 @@
               "Oper": 4,
               "SHORTNAME": 0,
               "Time": 8,
-              "device": 1,
-              "if_name": 2,
               "Type": 6,
-              "ifIndex": 7
+              "device": 1,
+              "ifIndex": 7,
+              "if_name": 2
             },
             "renameByName": {
               "SHORTNAME": "Device",
@@ -1146,6 +1406,18 @@
               "device": "Mgmt IP",
               "if_name": "Interface"
             }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Device",
+                "desc": false
+              }
+            ]
           }
         }
       ],
@@ -1176,28 +1448,27 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
             "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
             "legend": {
               "showLegend": true
-            }
+            },
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
           },
-          "min": 0,
-          "unit": "bps",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          }
+          },
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -1247,28 +1518,27 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
             "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
             "legend": {
               "showLegend": true
-            }
+            },
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
           },
-          "min": 0,
-          "unit": "pps",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          }
+          },
+          "unit": "pps"
         },
         "overrides": []
       },
@@ -1318,28 +1588,27 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
             "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
             "legend": {
               "showLegend": true
-            }
+            },
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
           },
-          "min": 0,
-          "unit": "pps",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          }
+          },
+          "unit": "pps"
         },
         "overrides": []
       },
@@ -1389,28 +1658,27 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
             "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
             "legend": {
               "showLegend": true
-            }
+            },
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
           },
-          "min": 0,
-          "unit": "pps",
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          }
+          },
+          "unit": "pps"
         },
         "overrides": []
       },
@@ -1478,8 +1746,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1616,7 +1883,13 @@
       },
       "id": 12,
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Device"
+          }
+        ]
       },
       "targets": [
         {
@@ -1679,6 +1952,18 @@
               "if_name": "Interface"
             }
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Device",
+                "desc": false
+              }
+            ]
+          }
         }
       ],
       "type": "table"
@@ -1696,12 +1981,12 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
-            "csrx"
+            "All"
           ],
           "value": [
-            "csrx"
+            "$__all"
           ]
         },
         "datasource": {
@@ -1725,7 +2010,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -1761,6 +2046,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 16,
-  "weekStart": ""
+  "version": 9,
+  "weekStart": "",
+  "id": null
 }

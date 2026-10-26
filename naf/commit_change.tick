@@ -1,0 +1,35 @@
+// Alert when the latest commit timestamp (get-commit-information, sequence 0) changes on a device.
+// Deployed by JTSO as a stream task on jtsdb.autogen.
+
+var data = stream
+    |from()
+        .measurement('COMMIT')
+        .groupBy('device', 'SHORTNAME')
+        .where(lambda: "commit_seq" == '0')
+
+// difference() only emits the computed field, so join it back with the original point
+// to keep commit_user / commit_client available to the alert message.
+var delta = data
+    |difference('commit_epoch')
+        .as('delta')
+
+var alert = data
+    |join(delta)
+        .as('cur', 'diff')
+        .tolerance(1s)
+    |eval(lambda: "cur.commit_epoch", lambda: "cur.commit_user", lambda: "cur.commit_client", lambda: "diff.delta")
+        .as('commit_epoch', 'commit_user', 'commit_client', 'delta')
+    |alert()
+        .id('commit-change/{{ index .Tags "device" }}')
+        .message('New commit on {{ index .Tags "SHORTNAME" }} ({{ index .Tags "device" }}) by {{ index .Fields "commit_user" }} via {{ index .Fields "commit_client" }} at epoch {{ index .Fields "commit_epoch" }}')
+        .details('')
+        .info(lambda: "delta" != 0)
+        .noRecoveries()
+        .log('/var/lib/kapacitor/alerts.log')
+
+alert
+    |influxDBOut()
+        .database('jtsdb')
+        .retentionPolicy('autogen')
+        .measurement('COMMIT_ALERT')
+        .tag('kapacitor', 'commit_change')
