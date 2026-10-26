@@ -130,8 +130,8 @@
             "fields": {},
             "sort": [
               {
-                "field": "Device",
-                "desc": false
+                "desc": false,
+                "field": "Device"
               }
             ]
           }
@@ -275,8 +275,8 @@
             "fields": {},
             "sort": [
               {
-                "field": "Device",
-                "desc": false
+                "desc": false,
+                "field": "Device"
               }
             ]
           }
@@ -720,7 +720,7 @@
           "resultFormat": "time_series"
         }
       ],
-      "title": "Memory (cRPD)",
+      "title": "Memory",
       "type": "timeseries"
     },
     {
@@ -845,8 +845,8 @@
             "fields": {},
             "sort": [
               {
-                "field": "Device",
-                "desc": false
+                "desc": false,
+                "field": "Device"
               }
             ]
           }
@@ -960,11 +960,36 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
             "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "never",
-            "spanNulls": true
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "min": 0,
@@ -972,11 +997,13 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
-          "unit": "pps"
+          "unit": "pps",
+          "unitScale": true
         },
         "overrides": [
           {
@@ -1060,7 +1087,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1151,7 +1179,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange"
+                "color": "orange",
+                "value": null
               }
             ]
           },
@@ -1235,7 +1264,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange"
+                "color": "orange",
+                "value": null
               }
             ]
           },
@@ -1296,7 +1326,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1414,8 +1445,8 @@
             "fields": {},
             "sort": [
               {
-                "field": "Device",
-                "desc": false
+                "desc": false,
+                "field": "Device"
               }
             ]
           }
@@ -1959,8 +1990,8 @@
             "fields": {},
             "sort": [
               {
-                "field": "Device",
-                "desc": false
+                "desc": false,
+                "field": "Device"
               }
             ]
           }
@@ -1969,7 +2000,7 @@
       "type": "table"
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 39,
   "tags": [
     "naf",
@@ -1983,10 +2014,10 @@
         "current": {
           "selected": true,
           "text": [
-            "All"
+            "csrx"
           ],
           "value": [
-            "$__all"
+            "csrx"
           ]
         },
         "datasource": {
@@ -2046,7 +2077,6 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 9,
-  "weekStart": "",
-  "id": null
+  "version": 10,
+  "weekStart": ""
 }
