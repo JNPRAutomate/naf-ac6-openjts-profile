@@ -1,0 +1,13 @@
+# General
+**.bak
+**.log
+**.log.gz
+**.gz
+**.tgz
+**/.vscode/
+settings.json
+
+# Secrets
+**/grafana.token.txt
+**/*.token
+**/*token*.txt
