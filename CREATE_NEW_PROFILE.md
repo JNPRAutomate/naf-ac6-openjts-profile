@@ -228,6 +228,15 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 
 ---
 
+### NAF workshop: "Drift (NAF loop)" row
+
+The last row of `dashboard-naf.json` belongs to the NAF workshop closed loop (`~/naf-ac6-workshop`).
+Its panels read openJTS data (`NETWORK_INSTANCE_BGP`) **and** measurements written by the workshop
+code: `naf_intent` (intent seeded by `observability/seed_intent.py`) and `naf_secpolicy`
+(`collector/netconf_poller.py`). Without the workshop running, those panels show *No data*.
+The dashboard also has an annotation query on tag `naf` that shows orchestrator remediations.
+The commit panel for that loop is the existing **Latest commit** table.
+
 ## 6. Package and deploy
 
 ```bash

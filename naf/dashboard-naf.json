@@ -12,6 +12,24 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "name": "NAF remediations",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [
+            "naf"
+          ],
+          "type": "tags"
+        }
       }
     ]
   },
@@ -1998,6 +2016,577 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "type": "row",
+      "title": "Drift (NAF loop)",
+      "id": 32,
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 87
+      }
+    },
+    {
+      "type": "table",
+      "title": "BGP peer-as: actual vs intent (bgp-peer-drift)",
+      "id": 33,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Actual = openJTS gNMI NETWORK_INSTANCE_BGP.session_peer_as; intent = naf_intent (usecase=bgp-peer-drift, seeded by observability/seed_intent.py). Rows are matched on the neighbour address. Kapacitor task bgp_peer_drift raises bgp-peer-drift:<device>:<neighbor>.",
+      "gridPos": {
+        "h": 6,
+        "w": 14,
+        "x": 0,
+        "y": 88
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"session_peer_as\") AS \"Actual peer-as\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"neighbor_address\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"session_state\") AS \"State\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 30d GROUP BY \"neighbor_address\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"peer_as\") AS \"Intended peer-as\" FROM \"naf_intent\" WHERE \"usecase\" = 'bgp-peer-drift' GROUP BY \"device\", \"neighbor_address\"",
+          "rawQuery": true,
+          "refId": "C",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "isNotNull",
+                  "options": {}
+                },
+                "fieldName": "SHORTNAME"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Drift",
+            "binary": {
+              "left": "Actual peer-as",
+              "operator": "-",
+              "right": "Intended peer-as"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "device": true
+            },
+            "indexByName": {
+              "SHORTNAME": 0,
+              "neighbor_address": 1,
+              "State": 2,
+              "Actual peer-as": 3,
+              "Intended peer-as": 4,
+              "Drift": 5
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "neighbor_address": "Neighbor"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Drift"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "in sync",
+                        "color": "green",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "range",
+                    "options": {
+                      "from": -1000000000000.0,
+                      "to": 1000000000000.0,
+                      "result": {
+                        "text": "DRIFT",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ESTABLISHED": {
+                        "color": "green",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": ".+",
+                      "result": {
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "annolist",
+      "title": "Orchestrator remediations",
+      "id": 34,
+      "description": "Grafana annotations posted by the orchestrator on every 'remediated' event (GRAFANA_ANNOTATIONS=true), tag naf.",
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 14,
+        "y": 88
+      },
+      "options": {
+        "onlyFromThisDashboard": false,
+        "onlyInTimeRange": false,
+        "tags": [
+          "naf"
+        ],
+        "limit": 10,
+        "showUser": false,
+        "showTime": true,
+        "showTags": true,
+        "navigateToPanel": false,
+        "navigateBefore": "10m",
+        "navigateAfter": "10m"
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "BGP session state (bgp-peer-drift)",
+      "id": 35,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "gNMI on_change session-state per device and neighbour.",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"session_state\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME \u2192 $tag_neighbor_address"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "ESTABLISHED": {
+                  "color": "green",
+                  "index": 0
+                }
+              }
+            }
+          ],
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "alignValue": "left",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "timeseries",
+      "title": "Received prefixes vs rx_max (prefix-limit)",
+      "id": 36,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
+      "gridPos": {
+        "h": 8,
+        "w": 14,
+        "x": 0,
+        "y": 100
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 40
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Prefix intent (prefix-limit)",
+      "id": 37,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 14,
+        "y": 100
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"rx_min\") AS \"rx_min\", last(\"rx_max\") AS \"rx_max\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "device": "Device",
+              "neighbor_address": "Neighbor"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "csrx rule order: actual vs intent (security-policy-drift, deferred)",
+      "id": 38,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (docs/OPEN-QUESTIONS.md Q1).",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 108
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE $timeFilter GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"rule_order\") AS \"Intended order\", last(\"rule_count\") AS \"Intended rules\" FROM \"naf_intent\" WHERE \"usecase\" = 'security-policy-drift' GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "device": "Device",
+              "from_zone": "From zone",
+              "to_zone": "To zone"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "pluginVersion": "10.3.1"
     }
   ],
   "refresh": "10s",
@@ -2077,6 +2666,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 10,
-  "weekStart": ""
+  "version": 11,
+  "weekStart": "",
+  "id": null
 }
