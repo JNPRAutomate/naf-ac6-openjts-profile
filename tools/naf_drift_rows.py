@@ -293,15 +293,69 @@ def build(y: int, first_id: int) -> list[dict]:
     return L.panels
 
 
+# Rows open when the dashboard loads; every other row starts collapsed (attendees expand the row of
+# the use case they work on). Expanding in the browser is not saved, so the profile file stays the
+# single source of truth.
+OPEN_ROWS = ("Device health", "Traffic counters", "NAF loop · Orchestrator decisions")
+
+
+def _is_open(title: str) -> bool:
+    return any(title.startswith(t) for t in OPEN_ROWS)
+
+
+def flatten(panels: list[dict]) -> list[dict]:
+    """Un-nest collapsed rows, so the dashboard is a flat list in display order (idempotent input)."""
+    out: list[dict] = []
+    for p in panels:
+        children = (p.get("panels") or []) if p.get("type") == "row" else []
+        if p.get("type") == "row":
+            p = {**p, "collapsed": False, "panels": []}
+        out.append(p)
+        out.extend(children)
+    return out
+
+
+def sections(panels: list[dict]) -> list[tuple[dict | None, list[dict]]]:
+    """[(row or None, panels under it)] from a flat list."""
+    result: list[tuple[dict | None, list[dict]]] = [(None, [])]
+    for p in panels:
+        if p.get("type") == "row":
+            result.append((p, []))
+        else:
+            result[-1][1].append(p)
+    return [s for s in result if s[0] is not None or s[1]]
+
+
+def collapse_and_layout(panels: list[dict]) -> list[dict]:
+    """Re-stack sections top to bottom; nest the children of rows that are not in OPEN_ROWS."""
+    out: list[dict] = []
+    y = 0
+    for row, children in sections(panels):
+        top = min((c["gridPos"]["y"] for c in children), default=0)
+        height = max((c["gridPos"]["y"] + c["gridPos"]["h"] - top for c in children), default=0)
+        if row is not None:
+            row = {**row, "gridPos": {**row["gridPos"], "x": 0, "y": y, "w": 24, "h": 1}}
+            y += 1
+        placed = [{**c, "gridPos": {**c["gridPos"], "y": y + c["gridPos"]["y"] - top}} for c in children]
+        if row is not None and not _is_open(row.get("title", "")):
+            out.append({**row, "collapsed": True, "panels": placed})
+        else:
+            if row is not None:
+                out.append({**row, "collapsed": False, "panels": []})
+            out.extend(placed)
+            y += height
+    return out
+
+
 def main() -> None:
     d = json.loads(DASH.read_text())
-    panels = d["panels"]
+    panels = flatten(d["panels"])
     start = next((i for i, p in enumerate(panels) if p.get("type") == "row" and
                   (p.get("title", "").startswith("Drift (NAF loop)") or p.get("title", "").startswith("NAF "))), len(panels))
     kept = panels[:start]
     y = max((p["gridPos"]["y"] + p["gridPos"]["h"] for p in kept), default=0)
     first_id = max((p["id"] for p in kept), default=0) + 1
-    d["panels"] = kept + build(y, first_id)
+    d["panels"] = collapse_and_layout(kept + build(y, first_id))
     anns = d.setdefault("annotations", {}).setdefault("list", [])
     if not any(a.get("name") == "NAF remediations" for a in anns):
         anns.append({"datasource": {"type": "datasource", "uid": "grafana"}, "enable": True, "hide": False, "iconColor": "purple",
@@ -309,7 +363,9 @@ def main() -> None:
     d["version"] = d.get("version", 0) + 1
     d["id"] = None
     DASH.write_text(json.dumps(d, indent=2) + "\n")
-    print(f"kept {len(kept)} panels, added {len(d['panels']) - len(kept)} (rows + panels), version {d['version']}")
+    rows = [p for p in d["panels"] if p.get("type") == "row"]
+    print(f"kept {len(kept)} panels, NAF rows rebuilt, version {d['version']}; "
+          f"open: {[r['title'] for r in rows if not r['collapsed']]}; collapsed: {sum(r['collapsed'] for r in rows)}")
 
 
 if __name__ == "__main__":

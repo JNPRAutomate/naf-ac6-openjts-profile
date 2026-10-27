@@ -232,8 +232,14 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 
 The bottom of `dashboard-naf.json` belongs to the NAF workshop closed loop (`~/naf-ac6-workshop`):
 one row for the orchestrator and one row per use case. **Do not edit those panels by hand.**
-Regenerate them with `python3 tools/naf_drift_rows.py`. The script is idempotent and never touches
+Regenerate them with `python3 tools/naf_drift_rows.py`. The script is idempotent and never changes
 the panels above the first NAF row. Then rebuild and deploy the `.tgz`.
+
+The script also sets which rows start **collapsed**. Only the rows listed in `OPEN_ROWS` (*Device
+health*, *Traffic counters*, *NAF loop · Orchestrator decisions*) open by default; the others
+(*Interfaces*, *Drift: admin up / oper down*, every *NAF · <use case>* row) are collapsed, and their
+panels are nested inside the row object, as Grafana stores collapsed rows. Edit those rows' panels
+from the script or in the JSON, never by saving from the UI.
 
 | Row | KPIs | Data |
 |---|---|---|

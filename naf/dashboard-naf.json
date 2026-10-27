@@ -1076,7 +1076,7 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1084,326 +1084,327 @@
         "y": 34
       },
       "id": 29,
-      "panels": [],
-      "title": "Interfaces",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "fillOpacity": 70,
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineWidth": 0,
-            "spanNulls": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "down": {
-                  "color": "red",
-                  "index": 1,
-                  "text": "DOWN"
-                },
-                "up": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "UP"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 35
-      },
-      "id": 3,
-      "options": {
-        "alignValue": "center",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "showValue": "auto",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
+      "panels": [
         {
-          "alias": "$tag_SHORTNAME $tag_if_name",
-          "query": "SELECT last(\"if_oper_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Operational status over time",
-      "type": "state-timeline"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
           },
-          "custom": {
-            "fillOpacity": 70,
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineWidth": 0,
-            "spanNulls": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "down": {
-                  "color": "red",
-                  "index": 1,
-                  "text": "DOWN"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "fillOpacity": 70,
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
                 },
-                "up": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "UP"
-                }
+                "insertNulls": false,
+                "lineWidth": 0,
+                "spanNulls": false
               },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 42
-      },
-      "id": 14,
-      "options": {
-        "alignValue": "center",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "showValue": "auto",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "$tag_SHORTNAME $tag_if_name",
-          "query": "SELECT last(\"if_admin_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Admin status over time",
-      "type": "state-timeline"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "Admin|Oper"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "down": {
-                        "color": "red",
-                        "index": 1,
-                        "text": "DOWN"
-                      },
-                      "up": {
-                        "color": "green",
-                        "index": 0,
-                        "text": "UP"
-                      }
+              "mappings": [
+                {
+                  "options": {
+                    "down": {
+                      "color": "red",
+                      "index": 1,
+                      "text": "DOWN"
                     },
-                    "type": "value"
+                    "up": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "UP"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "orange",
+                    "value": null
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 35
+          },
+          "id": 3,
+          "options": {
+            "alignValue": "center",
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "mergeValues": true,
+            "rowHeight": 0.8,
+            "showValue": "auto",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "alias": "$tag_SHORTNAME $tag_if_name",
+              "query": "SELECT last(\"if_oper_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series"
+            }
+          ],
+          "title": "Operational status over time",
+          "type": "state-timeline"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "fillOpacity": 70,
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineWidth": 0,
+                "spanNulls": false
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "down": {
+                      "color": "red",
+                      "index": 1,
+                      "text": "DOWN"
+                    },
+                    "up": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "UP"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "orange",
+                    "value": null
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 42
+          },
+          "id": 14,
+          "options": {
+            "alignValue": "center",
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "mergeValues": true,
+            "rowHeight": 0.8,
+            "showValue": "auto",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "alias": "$tag_SHORTNAME $tag_if_name",
+              "query": "SELECT last(\"if_admin_status\") FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series"
+            }
+          ],
+          "title": "Admin status over time",
+          "type": "state-timeline"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unitScale": true
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": "Admin|Oper"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "down": {
+                            "color": "red",
+                            "index": 1,
+                            "text": "DOWN"
+                          },
+                          "up": {
+                            "color": "green",
+                            "index": 0,
+                            "text": "UP"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
                   }
                 ]
               }
             ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 49
-      },
-      "id": 4,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Device"
-          }
-        ]
-      },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\", last(\"if_type\") AS \"Type\", last(\"if_index\") AS \"ifIndex\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "title": "Interface inventory (latest)",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 4,
           "options": {
-            "excludeByName": {
-              "Time": true
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
             },
-            "indexByName": {
-              "Admin": 3,
-              "MTU": 5,
-              "Oper": 4,
-              "SHORTNAME": 0,
-              "Time": 8,
-              "Type": 6,
-              "device": 1,
-              "ifIndex": 7,
-              "if_name": 2
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "Time": "Last seen",
-              "device": "Mgmt IP",
-              "if_name": "Interface"
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
+            "showHeader": true,
+            "sortBy": [
               {
                 "desc": false,
-                "field": "Device"
+                "displayName": "Device"
               }
             ]
-          }
+          },
+          "pluginVersion": "10.3.1",
+          "targets": [
+            {
+              "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\", last(\"if_type\") AS \"Type\", last(\"if_index\") AS \"ifIndex\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "title": "Interface inventory (latest)",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {
+                  "Admin": 3,
+                  "MTU": 5,
+                  "Oper": 4,
+                  "SHORTNAME": 0,
+                  "Time": 8,
+                  "Type": 6,
+                  "device": 1,
+                  "ifIndex": 7,
+                  "if_name": 2
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device",
+                  "Time": "Last seen",
+                  "device": "Mgmt IP",
+                  "if_name": "Interface"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "fields": {},
+                "sort": [
+                  {
+                    "desc": false,
+                    "field": "Device"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": "table"
         }
       ],
-      "type": "table"
+      "title": "Interfaces",
+      "type": "row"
     },
     {
       "collapsed": false,
@@ -1411,7 +1412,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 35
       },
       "id": 9,
       "panels": [],
@@ -1458,7 +1459,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 36
       },
       "id": 5,
       "options": {
@@ -1528,7 +1529,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 36
       },
       "id": 6,
       "options": {
@@ -1598,7 +1599,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 44
       },
       "id": 7,
       "options": {
@@ -1668,7 +1669,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 44
       },
       "id": 8,
       "options": {
@@ -1699,256 +1700,257 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 52
       },
       "id": 10,
-      "panels": [],
-      "title": "Drift: admin up / oper down",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "description": "Interfaces configured up (admin) but not operationally up.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 0,
-        "y": 75
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "count"
-          ],
-          "fields": "/^if_name$/",
-          "values": false
-        },
-        "textMode": "value"
-      },
-      "targets": [
+      "panels": [
         {
-          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"if_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "title": "Interfaces in drift",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "equal",
-                  "options": {
-                    "value": "up"
-                  }
-                },
-                "fieldName": "Admin"
-              },
-              {
-                "config": {
-                  "id": "notEqual",
-                  "options": {
-                    "value": "up"
-                  }
-                },
-                "fieldName": "Oper"
-              }
-            ],
-            "match": "all",
-            "type": "include"
-          }
-        }
-      ],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
           },
-          "noValue": "No drift: every admin-up interface is oper-up"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "Admin|Oper"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
+          "description": "Interfaces configured up (admin) but not operationally up.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
               },
-              {
-                "id": "mappings",
-                "value": [
+              "decimals": 0,
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
                   {
-                    "options": {
-                      "down": {
-                        "color": "red",
-                        "index": 1,
-                        "text": "DOWN"
-                      },
-                      "up": {
-                        "color": "green",
-                        "index": 0,
-                        "text": "UP"
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 6,
+            "x": 0,
+            "y": 53
+          },
+          "id": 11,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "count"
+              ],
+              "fields": "/^if_name$/",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"if_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "title": "Interfaces in drift",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "equal",
+                      "options": {
+                        "value": "up"
                       }
                     },
-                    "type": "value"
+                    "fieldName": "Admin"
+                  },
+                  {
+                    "config": {
+                      "id": "notEqual",
+                      "options": {
+                        "value": "up"
+                      }
+                    },
+                    "fieldName": "Oper"
+                  }
+                ],
+                "match": "all",
+                "type": "include"
+              }
+            }
+          ],
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "No drift: every admin-up interface is oper-up"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": "Admin|Oper"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "down": {
+                            "color": "red",
+                            "index": 1,
+                            "text": "DOWN"
+                          },
+                          "up": {
+                            "color": "green",
+                            "index": 0,
+                            "text": "UP"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
                   }
                 ]
               }
             ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 18,
-        "x": 6,
-        "y": 75
-      },
-      "id": 12,
-      "options": {
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Device"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "title": "Drifted interfaces",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "filterByValue",
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 18,
+            "x": 6,
+            "y": 53
+          },
+          "id": 12,
           "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "equal",
-                  "options": {
-                    "value": "up"
-                  }
-                },
-                "fieldName": "Admin"
-              },
-              {
-                "config": {
-                  "id": "notEqual",
-                  "options": {
-                    "value": "up"
-                  }
-                },
-                "fieldName": "Oper"
-              }
-            ],
-            "match": "all",
-            "type": "include"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {
-              "Admin": 3,
-              "MTU": 5,
-              "Oper": 4,
-              "SHORTNAME": 0,
-              "device": 1,
-              "if_name": 2
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "device": "Mgmt IP",
-              "if_name": "Interface"
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
+            "showHeader": true,
+            "sortBy": [
               {
                 "desc": false,
-                "field": "Device"
+                "displayName": "Device"
               }
             ]
-          }
+          },
+          "targets": [
+            {
+              "query": "SELECT last(\"if_admin_status\") AS \"Admin\", last(\"if_oper_status\") AS \"Oper\", last(\"if_mtu\") AS \"MTU\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"device\", \"if_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "title": "Drifted interfaces",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "equal",
+                      "options": {
+                        "value": "up"
+                      }
+                    },
+                    "fieldName": "Admin"
+                  },
+                  {
+                    "config": {
+                      "id": "notEqual",
+                      "options": {
+                        "value": "up"
+                      }
+                    },
+                    "fieldName": "Oper"
+                  }
+                ],
+                "match": "all",
+                "type": "include"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {
+                  "Admin": 3,
+                  "MTU": 5,
+                  "Oper": 4,
+                  "SHORTNAME": 0,
+                  "device": 1,
+                  "if_name": 2
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device",
+                  "device": "Mgmt IP",
+                  "if_name": "Interface"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "fields": {},
+                "sort": [
+                  {
+                    "desc": false,
+                    "field": "Device"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": "table"
         }
       ],
-      "type": "table"
+      "title": "Drift: admin up / oper down",
+      "type": "row"
     },
     {
       "type": "row",
@@ -1960,7 +1962,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 82
+        "y": 53
       }
     },
     {
@@ -2038,7 +2040,7 @@
         "h": 7,
         "w": 5,
         "x": 0,
-        "y": 83
+        "y": 54
       },
       "datasource": {
         "type": "influxdb",
@@ -2101,7 +2103,7 @@
         "h": 7,
         "w": 7,
         "x": 5,
-        "y": 83
+        "y": 54
       },
       "datasource": {
         "type": "influxdb",
@@ -2132,7 +2134,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 83
+        "y": 54
       },
       "datasource": {
         "type": "influxdb",
@@ -2221,7 +2223,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 90
+        "y": 61
       },
       "datasource": {
         "type": "influxdb",
@@ -2403,7 +2405,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 96
+        "y": 67
       },
       "datasource": {
         "type": "influxdb",
@@ -2415,1642 +2417,1647 @@
       "type": "row",
       "title": "NAF \u00b7 bgp-peer-drift",
       "id": 38,
-      "collapsed": false,
-      "panels": [],
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "table",
+          "title": "BGP peer-as: actual vs intent",
+          "description": "Actual = openJTS gNMI NETWORK_INSTANCE_BGP.session_peer_as; intent = naf_intent (usecase=bgp-peer-drift). Matched on the neighbour. Kapacitor task bgp_peer_drift.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"session_peer_as\") AS \"Actual peer-as\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"neighbor_address\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"session_state\") AS \"State\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 30d GROUP BY \"neighbor_address\"",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "table"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"peer_as\") AS \"Intended peer-as\" FROM \"naf_intent\" WHERE \"usecase\" = 'bgp-peer-drift' GROUP BY \"device\", \"neighbor_address\"",
+              "rawQuery": true,
+              "refId": "C",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                }
+              }
+            },
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "filterByValue",
+              "options": {
+                "filters": [
+                  {
+                    "config": {
+                      "id": "isNotNull",
+                      "options": {}
+                    },
+                    "fieldName": "SHORTNAME"
+                  }
+                ],
+                "match": "all",
+                "type": "include"
+              }
+            },
+            {
+              "id": "calculateField",
+              "options": {
+                "alias": "Drift",
+                "binary": {
+                  "left": "Actual peer-as",
+                  "operator": "-",
+                  "right": "Intended peer-as"
+                },
+                "mode": "binary",
+                "reduce": {
+                  "reducer": "sum"
+                }
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "device": true
+                },
+                "indexByName": {
+                  "SHORTNAME": 0,
+                  "neighbor_address": 1,
+                  "State": 2,
+                  "Actual peer-as": 3,
+                  "Intended peer-as": 4,
+                  "Drift": 5
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device",
+                  "neighbor_address": "Neighbor"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Drift"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "0": {
+                            "text": "in sync",
+                            "color": "green",
+                            "index": 0
+                          }
+                        }
+                      },
+                      {
+                        "type": "range",
+                        "options": {
+                          "from": -1000000000000.0,
+                          "to": 1000000000000.0,
+                          "result": {
+                            "text": "DRIFT",
+                            "color": "red",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "State"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "ESTABLISHED": {
+                            "color": "green",
+                            "index": 0
+                          }
+                        }
+                      },
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": ".+",
+                          "result": {
+                            "color": "red",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 39,
+          "gridPos": {
+            "h": 6,
+            "w": 14,
+            "x": 0,
+            "y": 76
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "BGP group config (NETCONF)",
+          "description": "naf profile NAF_CONFIG (get-configuration protocols bgp, 30 s): configured peer-as and import policy per group. Last 90 s only, so removed leaves disappear.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"cfg_peer_as\") AS \"Configured peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device",
+                  "bgp_group": "BGP group"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "no BGP config collected"
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 40,
+          "gridPos": {
+            "h": 6,
+            "w": 10,
+            "x": 14,
+            "y": 76
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "state-timeline",
+          "title": "BGP session state",
+          "description": "gNMI on_change session-state per device and neighbour.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"session_state\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2192 $tag_neighbor_address"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "ESTABLISHED": {
+                      "color": "green",
+                      "index": 0
+                    }
+                  }
+                }
+              ],
+              "custom": {
+                "fillOpacity": 80,
+                "lineWidth": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showValue": "auto",
+            "mergeValues": true,
+            "rowHeight": 0.8,
+            "alignValue": "left",
+            "legend": {
+              "showLegend": false,
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "id": 41,
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 82
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        }
+      ],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 104
+        "y": 75
       }
-    },
-    {
-      "type": "table",
-      "title": "BGP peer-as: actual vs intent",
-      "description": "Actual = openJTS gNMI NETWORK_INSTANCE_BGP.session_peer_as; intent = naf_intent (usecase=bgp-peer-drift). Matched on the neighbour. Kapacitor task bgp_peer_drift.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"session_peer_as\") AS \"Actual peer-as\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"neighbor_address\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"session_state\") AS \"State\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 30d GROUP BY \"neighbor_address\"",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "table"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"peer_as\") AS \"Intended peer-as\" FROM \"naf_intent\" WHERE \"usecase\" = 'bgp-peer-drift' GROUP BY \"device\", \"neighbor_address\"",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "isNotNull",
-                  "options": {}
-                },
-                "fieldName": "SHORTNAME"
-              }
-            ],
-            "match": "all",
-            "type": "include"
-          }
-        },
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Drift",
-            "binary": {
-              "left": "Actual peer-as",
-              "operator": "-",
-              "right": "Intended peer-as"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "device": true
-            },
-            "indexByName": {
-              "SHORTNAME": 0,
-              "neighbor_address": 1,
-              "State": 2,
-              "Actual peer-as": 3,
-              "Intended peer-as": 4,
-              "Drift": 5
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "neighbor_address": "Neighbor"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Drift"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "in sync",
-                        "color": "green",
-                        "index": 0
-                      }
-                    }
-                  },
-                  {
-                    "type": "range",
-                    "options": {
-                      "from": -1000000000000.0,
-                      "to": 1000000000000.0,
-                      "result": {
-                        "text": "DRIFT",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "State"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "ESTABLISHED": {
-                        "color": "green",
-                        "index": 0
-                      }
-                    }
-                  },
-                  {
-                    "type": "regex",
-                    "options": {
-                      "pattern": ".+",
-                      "result": {
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 39,
-      "gridPos": {
-        "h": 6,
-        "w": 14,
-        "x": 0,
-        "y": 105
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "BGP group config (NETCONF)",
-      "description": "naf profile NAF_CONFIG (get-configuration protocols bgp, 30 s): configured peer-as and import policy per group. Last 90 s only, so removed leaves disappear.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"cfg_peer_as\") AS \"Configured peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "bgp_group": "BGP group"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "no BGP config collected"
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 40,
-      "gridPos": {
-        "h": 6,
-        "w": 10,
-        "x": 14,
-        "y": 105
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "state-timeline",
-      "title": "BGP session state",
-      "description": "gNMI on_change session-state per device and neighbour.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"session_state\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME \u2192 $tag_neighbor_address"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "ESTABLISHED": {
-                  "color": "green",
-                  "index": 0
-                }
-              }
-            }
-          ],
-          "custom": {
-            "fillOpacity": 80,
-            "lineWidth": 0
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "auto",
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "alignValue": "left",
-        "legend": {
-          "showLegend": false,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "id": 41,
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 111
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
     },
     {
       "type": "row",
       "title": "NAF \u00b7 troubleshooting-drift",
       "id": 42,
-      "collapsed": false,
-      "panels": [],
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "table",
+          "title": "Debug config present (BGP traceoptions)",
+          "description": "naf profile NAF_TRACE (get-configuration protocols bgp traceoptions, 30 s). A row means traceoptions are configured on that device. Intent: traceoptions_allowed=false unless a maintenance window is open.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"bgp_trace_file\") AS \"Trace file\" FROM \"NAF_TRACE\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "\u2714 no BGP traceoptions on any device"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Trace file"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": ".+",
+                          "result": {
+                            "color": "red",
+                            "index": 0
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 43,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 77
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Logging intent and maintenance windows",
+          "description": "naf_intent usecase=troubleshooting-drift (re-seed after every intent change). window_open=true \u2192 the orchestrator answers within-policy.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"traceoptions_allowed\") AS \"Traceoptions allowed\", last(\"window_open\") AS \"Window open\" FROM \"naf_intent\" WHERE \"usecase\" = 'troubleshooting-drift' GROUP BY \"device\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "device": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Window open"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "true": {
+                            "color": "orange",
+                            "index": 0
+                          },
+                          "false": {
+                            "color": "green",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Traceoptions allowed"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "true": {
+                            "color": "orange",
+                            "index": 0
+                          },
+                          "false": {
+                            "color": "green",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 44,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 77
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "bargauge",
+          "title": "Log file size",
+          "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size).",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"log_file_size\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"log_file\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME $tag_log_file"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "min": 0,
+              "max": 10485760,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 5242880
+                  },
+                  {
+                    "color": "red",
+                    "value": 9437184
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient",
+            "showUnfilled": true,
+            "valueMode": "color",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "id": 45,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 77
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "timeseries",
+          "title": "Log growth (bytes/s)",
+          "description": "Rate of NAF_LOGFILES.log_file_size. bgp.log growing = traceoptions active; messages jumps with 'any any'. Baseline messages growth comes from openJTS's own NETCONF polling (interactive-commands any). Negative rates (rotation) are hidden.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT mean(\"log_file_size_rate\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter AND \"log_file_size_rate\" >= 0 GROUP BY time($__interval), \"SHORTNAME\", \"log_file\" fill(none)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME $tag_log_file"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true,
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 46,
+          "gridPos": {
+            "h": 7,
+            "w": 16,
+            "x": 0,
+            "y": 83
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Latest commit",
+          "description": "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises troubleshooting-drift:<device>.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Last commit\", last(\"commit_epoch\") * 1000 AS \"Age\", last(\"commit_user\") AS \"User\", last(\"commit_client\") AS \"Client\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Last commit"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Age"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeFromNow"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 47,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 83
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        }
+      ],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 116
+        "y": 76
       }
-    },
-    {
-      "type": "table",
-      "title": "Debug config present (BGP traceoptions)",
-      "description": "naf profile NAF_TRACE (get-configuration protocols bgp traceoptions, 30 s). A row means traceoptions are configured on that device. Intent: traceoptions_allowed=false unless a maintenance window is open.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"bgp_trace_file\") AS \"Trace file\" FROM \"NAF_TRACE\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "SHORTNAME": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "\u2714 no BGP traceoptions on any device"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Trace file"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "regex",
-                    "options": {
-                      "pattern": ".+",
-                      "result": {
-                        "color": "red",
-                        "index": 0
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 43,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 117
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Logging intent and maintenance windows",
-      "description": "naf_intent usecase=troubleshooting-drift (re-seed after every intent change). window_open=true \u2192 the orchestrator answers within-policy.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"traceoptions_allowed\") AS \"Traceoptions allowed\", last(\"window_open\") AS \"Window open\" FROM \"naf_intent\" WHERE \"usecase\" = 'troubleshooting-drift' GROUP BY \"device\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "device": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Window open"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "true": {
-                        "color": "orange",
-                        "index": 0
-                      },
-                      "false": {
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Traceoptions allowed"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "true": {
-                        "color": "orange",
-                        "index": 0
-                      },
-                      "false": {
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 44,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 8,
-        "y": 117
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "bargauge",
-      "title": "Log file size",
-      "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size).",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"log_file_size\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"log_file\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME $tag_log_file"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "min": 0,
-          "max": 10485760,
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 5242880
-              },
-              {
-                "color": "red",
-                "value": 9437184
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "id": 45,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 117
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "timeseries",
-      "title": "Log growth (bytes/s)",
-      "description": "Rate of NAF_LOGFILES.log_file_size. bgp.log growing = traceoptions active; messages jumps with 'any any'. Baseline messages growth comes from openJTS's own NETCONF polling (interactive-commands any). Negative rates (rotation) are hidden.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT mean(\"log_file_size_rate\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter AND \"log_file_size_rate\" >= 0 GROUP BY time($__interval), \"SHORTNAME\", \"log_file\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME $tag_log_file"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "Bps",
-          "min": 0,
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "id": 46,
-      "gridPos": {
-        "h": 7,
-        "w": 16,
-        "x": 0,
-        "y": 123
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Latest commit",
-      "description": "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises troubleshooting-drift:<device>.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Last commit\", last(\"commit_epoch\") * 1000 AS \"Age\", last(\"commit_user\") AS \"User\", last(\"commit_client\") AS \"Client\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "SHORTNAME": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Last commit"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsIso"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Age"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeFromNow"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 47,
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 123
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
     },
     {
       "type": "row",
       "title": "NAF \u00b7 prefix-limit",
       "id": 48,
-      "collapsed": false,
-      "panels": [],
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Received prefixes vs rx_max",
+          "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 40
+                  },
+                  {
+                    "color": "red",
+                    "value": 50
+                  }
+                ]
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true,
+                "thresholdsStyle": {
+                  "mode": "line+area"
+                }
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 49,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 78
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "timeseries",
+          "title": "Pre-policy vs accepted (clamp effect)",
+          "description": "safi_received_pre_policy (what the neighbour sends) vs safi_received (what passes the import policy). After the IMPORT-CLAMP the lines split: ~205 sent, 3 accepted.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"safi_received_pre_policy\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address pre-policy"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address accepted"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true,
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 50,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 78
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Import clamp (compensating action)",
+          "description": "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> = the orchestrator's compensating action is in place; it stays until a human removes it.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"cfg_peer_as\") AS \"peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "peer-as": true
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device",
+                  "bgp_group": "BGP group"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Import policy"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "none"
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": "^IMPORT-CLAMP.*",
+                          "result": {
+                            "color": "orange",
+                            "index": 0
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 51,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 86
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Prefix intent",
+          "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"rx_min\") AS \"rx_min\", last(\"rx_max\") AS \"rx_max\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "device": "Device",
+                  "neighbor_address": "Neighbor"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 52,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 86
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        }
+      ],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 130
+        "y": 77
       }
-    },
-    {
-      "type": "timeseries",
-      "title": "Received prefixes vs rx_max",
-      "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "min": 0,
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 40
-              },
-              {
-                "color": "red",
-                "value": 50
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
-            "thresholdsStyle": {
-              "mode": "line+area"
-            }
-          },
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "id": 49,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 131
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "timeseries",
-      "title": "Pre-policy vs accepted (clamp effect)",
-      "description": "safi_received_pre_policy (what the neighbour sends) vs safi_received (what passes the import policy). After the IMPORT-CLAMP the lines split: ~205 sent, 3 accepted.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"safi_received_pre_policy\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address pre-policy"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address accepted"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "min": 0,
-          "color": {
-            "mode": "palette-classic"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true,
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "id": 50,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 131
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Import clamp (compensating action)",
-      "description": "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> = the orchestrator's compensating action is in place; it stays until a human removes it.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"cfg_peer_as\") AS \"peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "peer-as": true
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "bgp_group": "BGP group"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Import policy"
-            },
-            "properties": [
-              {
-                "id": "noValue",
-                "value": "none"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "regex",
-                    "options": {
-                      "pattern": "^IMPORT-CLAMP.*",
-                      "result": {
-                        "color": "orange",
-                        "index": 0
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 51,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 139
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Prefix intent",
-      "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"rx_min\") AS \"rx_min\", last(\"rx_max\") AS \"rx_max\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "device": "Device",
-              "neighbor_address": "Neighbor"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 52,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 139
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
     },
     {
       "type": "row",
       "title": "NAF \u00b7 security-policy-drift (deferred)",
       "id": 53,
-      "collapsed": false,
-      "panels": [],
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "table",
+          "title": "csrx rule order: actual vs intent",
+          "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE $timeFilter GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"rule_order\") AS \"Intended order\", last(\"rule_count\") AS \"Intended rules\" FROM \"naf_intent\" WHERE \"usecase\" = 'security-policy-drift' GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                }
+              }
+            },
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "renameByName": {
+                  "device": "Device",
+                  "from_zone": "From zone",
+                  "to_zone": "To zone"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "deferred: csrx has no zones/policies yet"
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 54,
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 79
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        }
+      ],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 145
+        "y": 78
       }
-    },
-    {
-      "type": "table",
-      "title": "csrx rule order: actual vs intent",
-      "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE $timeFilter GROUP BY \"device\", \"from_zone\", \"to_zone\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"rule_order\") AS \"Intended order\", last(\"rule_count\") AS \"Intended rules\" FROM \"naf_intent\" WHERE \"usecase\" = 'security-policy-drift' GROUP BY \"device\", \"from_zone\", \"to_zone\"",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "renameByName": {
-              "device": "Device",
-              "from_zone": "From zone",
-              "to_zone": "To zone"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "deferred: csrx has no zones/policies yet"
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 54,
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 146
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
     },
     {
       "type": "row",
       "title": "NAF \u00b7 swap-a-block",
       "id": 55,
-      "collapsed": false,
-      "panels": [],
+      "collapsed": true,
+      "panels": [
+        {
+          "type": "table",
+          "title": "Collector A: openJTS profile (COMMIT poll)",
+          "description": "naf profile COMMIT, the default Collector for troubleshooting-drift.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"commit_user\") AS \"User\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "SHORTNAME": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Newest commit"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 56,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 80
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Collector B: Python poller (naf_commit)",
+          "description": "collector/netconf_poller.py, the alternative Collector component. Same values as A when it runs.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"user\") AS \"User\" FROM \"naf_commit\" WHERE $timeFilter GROUP BY \"device\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "device": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "poller not running"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Newest commit"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dateTimeAsIso"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 57,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 80
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Collector C: syslog push (naf_syslog)",
+          "description": "telegraf_naf_syslog (compose profile naf-syslog): UI_COMMIT_COMPLETED pushed by the devices. Arrives ~5 s after a commit instead of ~30 s.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT count(\"message\") AS \"Commit messages\", last(\"message\") AS \"Last message\" FROM \"naf_syslog\" WHERE $timeFilter GROUP BY \"hostname\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "hostname": "Device"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "syslog Collector not active"
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 58,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 80
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "Which Intent backend and Executor acted",
+          "description": "naf_event decisions that reached the Executor (pending / remediated / no-drift), grouped by the Intent backend and Executor in use. Same id, plan and diff whatever the blocks.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT count(\"count\") AS \"Decisions\" FROM \"naf_event\" WHERE $timeFilter AND \"kind\" =~ /^(pending|remediated|no-drift)$/ GROUP BY \"intent_backend\", \"executor\", \"kind\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "renameByName": {
+                  "intent_backend": "Intent",
+                  "executor": "Executor",
+                  "kind": "Decision"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "no executor decisions in range"
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 59,
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 86
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        }
+      ],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 151
+        "y": 79
       }
-    },
-    {
-      "type": "table",
-      "title": "Collector A: openJTS profile (COMMIT poll)",
-      "description": "naf profile COMMIT, the default Collector for troubleshooting-drift.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"commit_user\") AS \"User\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "SHORTNAME": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Newest commit"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsIso"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 56,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 152
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Collector B: Python poller (naf_commit)",
-      "description": "collector/netconf_poller.py, the alternative Collector component. Same values as A when it runs.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"user\") AS \"User\" FROM \"naf_commit\" WHERE $timeFilter GROUP BY \"device\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "device": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "poller not running"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Newest commit"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsIso"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 57,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 8,
-        "y": 152
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Collector C: syslog push (naf_syslog)",
-      "description": "telegraf_naf_syslog (compose profile naf-syslog): UI_COMMIT_COMPLETED pushed by the devices. Arrives ~5 s after a commit instead of ~30 s.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT count(\"message\") AS \"Commit messages\", last(\"message\") AS \"Last message\" FROM \"naf_syslog\" WHERE $timeFilter GROUP BY \"hostname\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "hostname": "Device"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "syslog Collector not active"
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 58,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 152
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Which Intent backend and Executor acted",
-      "description": "naf_event decisions that reached the Executor (pending / remediated / no-drift), grouped by the Intent backend and Executor in use. Same id, plan and diff whatever the blocks.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "jtsuid"
-          },
-          "query": "SELECT count(\"count\") AS \"Decisions\" FROM \"naf_event\" WHERE $timeFilter AND \"kind\" =~ /^(pending|remediated|no-drift)$/ GROUP BY \"intent_backend\", \"executor\", \"kind\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "intent_backend": "Intent",
-              "executor": "Executor",
-              "kind": "Decision"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            }
-          },
-          "noValue": "no executor decisions in range"
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "fields": ""
-        }
-      },
-      "id": 59,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 158
-      },
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "pluginVersion": "10.3.1"
     }
   ],
   "refresh": "10s",
@@ -4130,7 +4137,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 15,
+  "version": 17,
   "weekStart": "",
   "id": null
 }
