@@ -422,6 +422,46 @@
           "to": "commit_client"
         }
       ]
+    },
+    {
+      "order": 130,
+      "namepass": [
+        "NAF_CONFIG",
+        "NAF_TRACE",
+        "NAF_LOGFILES"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "name",
+          "to": "bgp_group"
+        },
+        {
+          "type": 1,
+          "from": "peer-as",
+          "to": "cfg_peer_as"
+        },
+        {
+          "type": 1,
+          "from": "import",
+          "to": "cfg_import"
+        },
+        {
+          "type": 1,
+          "from": "filename",
+          "to": "bgp_trace_file"
+        },
+        {
+          "type": 0,
+          "from": "file-name",
+          "to": "log_file"
+        },
+        {
+          "type": 1,
+          "from": "file-size",
+          "to": "log_file_size"
+        }
+      ]
     }
   ],
   "filtering_list": [
@@ -466,6 +506,20 @@
           "action": "accept"
         }
       ]
+    },
+    {
+      "order": 150,
+      "namepass": [
+        "NAF_LOGFILES"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "log_file",
+          "pattern": "^(messages|bgp[.]log|interactive-commands)$",
+          "action": "accept"
+        }
+      ]
     }
   ],
   "enrichment_list": [
@@ -498,6 +552,17 @@
         "SYSTEM_STORAGE",
         "ROUTE_SUMMARY",
         "COMMIT"
+      ],
+      "family": "crpd",
+      "two_levels": false,
+      "level1_tag": "device"
+    },
+    {
+      "order": 230,
+      "namepass": [
+        "NAF_CONFIG",
+        "NAF_TRACE",
+        "NAF_LOGFILES"
       ],
       "family": "crpd",
       "two_levels": false,
@@ -569,6 +634,15 @@
         "out_errors",
         "in_drops",
         "out_drops"
+      ]
+    },
+    {
+      "order": 510,
+      "namepass": [
+        "NAF_LOGFILES"
+      ],
+      "fields": [
+        "log_file_size"
       ]
     }
   ],
@@ -662,7 +736,12 @@
         "rt_hidden",
         "commit_epoch",
         "commit_user",
-        "commit_client"
+        "commit_client",
+        "cfg_peer_as",
+        "cfg_import",
+        "bgp_trace_file",
+        "log_file_size",
+        "log_file_size_rate"
       ]
     }
   ],
@@ -741,6 +820,43 @@
             {
               "field_path": "/commit-information/commit-history[sequence-number]/client",
               "field_type": "string"
+            }
+          ],
+          "interval": 30
+        },
+        {
+          "name": "NAF_CONFIG",
+          "rpc": "<get-configuration><configuration><protocols><bgp/></protocols></configuration></get-configuration>",
+          "fields": [
+            {
+              "field_path": "/configuration/protocols/bgp/group[name]/peer-as",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/configuration/protocols/bgp/group[name]/import",
+              "field_type": "string"
+            }
+          ],
+          "interval": 30
+        },
+        {
+          "name": "NAF_TRACE",
+          "rpc": "<get-configuration><configuration><protocols><bgp><traceoptions/></bgp></protocols></configuration></get-configuration>",
+          "fields": [
+            {
+              "field_path": "/configuration/protocols/bgp/traceoptions/file/filename",
+              "field_type": "string"
+            }
+          ],
+          "interval": 30
+        },
+        {
+          "name": "NAF_LOGFILES",
+          "rpc": "<file-list><detail/><path>/var/log/</path></file-list>",
+          "fields": [
+            {
+              "field_path": "/directory-list/directory/file-information[file-name]/file-size",
+              "field_type": "int"
             }
           ],
           "interval": 30

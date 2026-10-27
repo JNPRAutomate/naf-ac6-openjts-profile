@@ -2019,7 +2019,7 @@
     },
     {
       "type": "row",
-      "title": "Drift (NAF loop)",
+      "title": "NAF loop \u00b7 Orchestrator decisions (all use cases)",
       "id": 32,
       "collapsed": false,
       "panels": [],
@@ -2031,20 +2031,470 @@
       }
     },
     {
-      "type": "table",
-      "title": "BGP peer-as: actual vs intent (bgp-peer-drift)",
+      "type": "stat",
+      "title": "Autonomy level",
+      "description": "Autonomy of the orchestrator at its latest decision (naf_event.autonomy_level). Change it with PUT /autonomy?level=L1|L2|L3.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"autonomy_level\") FROM \"naf_event\" WHERE time > now() - 30d",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "orchestrator not seen",
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "L1 Observe",
+                  "color": "blue",
+                  "index": 0
+                },
+                "2": {
+                  "text": "L2 Assist",
+                  "color": "orange",
+                  "index": 1
+                },
+                "3": {
+                  "text": "L3 Autonomous",
+                  "color": "purple",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
       "id": 33,
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 0,
+        "y": 88
+      },
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "Actual = openJTS gNMI NETWORK_INSTANCE_BGP.session_peer_as; intent = naf_intent (usecase=bgp-peer-drift, seeded by observability/seed_intent.py). Rows are matched on the neighbour address. Kapacitor task bgp_peer_drift raises bgp-peer-drift:<device>:<neighbor>.",
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "bargauge",
+      "title": "Decisions by kind",
+      "description": "Orchestrator event-log kinds in the selected time range (notified, pending, remediated, no-drift, within-policy, recovered, ...).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT count(\"count\") FROM \"naf_event\" WHERE $timeFilter GROUP BY \"kind\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_kind"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 34,
       "gridPos": {
-        "h": 6,
-        "w": 14,
-        "x": 0,
+        "h": 7,
+        "w": 7,
+        "x": 5,
         "y": 88
       },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "annolist",
+      "title": "Remediations (annotations)",
+      "description": "Grafana annotations posted by the orchestrator on every 'remediated' event (GRAFANA_ANNOTATIONS=true), tag naf.",
+      "options": {
+        "onlyFromThisDashboard": false,
+        "onlyInTimeRange": false,
+        "tags": [
+          "naf"
+        ],
+        "limit": 10,
+        "showUser": false,
+        "showTime": true,
+        "showTags": true,
+        "navigateToPanel": false,
+        "navigateBefore": "10m",
+        "navigateAfter": "10m"
+      },
+      "id": 35,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 88
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "state-timeline",
+      "title": "Alert level per use case and device",
+      "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per use case / device.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"level\") FROM \"naf_event\" WHERE $timeFilter AND \"kind\" != 'autonomy-changed' GROUP BY time($__interval), \"usecase\", \"device\" fill(previous)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_usecase \u00b7 $tag_device"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "OK": {
+                  "color": "green",
+                  "index": 0
+                },
+                "INFO": {
+                  "color": "blue",
+                  "index": 1
+                },
+                "WARNING": {
+                  "color": "orange",
+                  "index": 2
+                },
+                "CRITICAL": {
+                  "color": "red",
+                  "index": 3
+                }
+              }
+            }
+          ],
+          "custom": {
+            "fillOpacity": 80,
+            "lineWidth": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "alignValue": "left",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "id": 36,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 95
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Decision log (latest first)",
+      "description": "Every orchestrator decision (naf_event, ORCH_INFLUX_EVENTS=true): kind, alert id and level, autonomy, the executor and intent backend that acted.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT \"kind\", \"event_id\", \"level\", \"autonomy\", \"executor\", \"intent_backend\", \"compensating\" FROM \"naf_event\" WHERE $timeFilter ORDER BY time DESC LIMIT 50",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "event_id": "Alert id",
+              "kind": "Decision",
+              "level": "Level",
+              "autonomy": "Autonomy",
+              "executor": "Executor",
+              "intent_backend": "Intent",
+              "compensating": "Compensating"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "no decisions in range"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Level"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "OK": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "INFO": {
+                        "color": "blue",
+                        "index": 1
+                      },
+                      "WARNING": {
+                        "color": "orange",
+                        "index": 2
+                      },
+                      "CRITICAL": {
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Decision"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "remediated": {
+                        "color": "purple",
+                        "index": 0
+                      },
+                      "pending": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "notified": {
+                        "color": "blue",
+                        "index": 2
+                      },
+                      "no-drift": {
+                        "color": "green",
+                        "index": 3
+                      },
+                      "within-policy": {
+                        "color": "green",
+                        "index": 4
+                      },
+                      "recovered": {
+                        "color": "green",
+                        "index": 5
+                      },
+                      "rejected": {
+                        "color": "red",
+                        "index": 6
+                      },
+                      "error": {
+                        "color": "red",
+                        "index": 7
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 37,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 101
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "row",
+      "title": "NAF \u00b7 bgp-peer-drift",
+      "id": 38,
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 109
+      }
+    },
+    {
+      "type": "table",
+      "title": "BGP peer-as: actual vs intent",
+      "description": "Actual = openJTS gNMI NETWORK_INSTANCE_BGP.session_peer_as; intent = naf_intent (usecase=bgp-peer-drift). Matched on the neighbour. Kapacitor task bgp_peer_drift.",
       "targets": [
         {
           "datasource": {
@@ -2245,49 +2695,94 @@
           "fields": ""
         }
       },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "annolist",
-      "title": "Orchestrator remediations",
-      "id": 34,
-      "description": "Grafana annotations posted by the orchestrator on every 'remediated' event (GRAFANA_ANNOTATIONS=true), tag naf.",
+      "id": 39,
       "gridPos": {
         "h": 6,
-        "w": 10,
-        "x": 14,
-        "y": 88
+        "w": 14,
+        "x": 0,
+        "y": 110
       },
-      "options": {
-        "onlyFromThisDashboard": false,
-        "onlyInTimeRange": false,
-        "tags": [
-          "naf"
-        ],
-        "limit": 10,
-        "showUser": false,
-        "showTime": true,
-        "showTags": true,
-        "navigateToPanel": false,
-        "navigateBefore": "10m",
-        "navigateAfter": "10m"
-      }
-    },
-    {
-      "type": "state-timeline",
-      "title": "BGP session state (bgp-peer-drift)",
-      "id": 35,
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "gNMI on_change session-state per device and neighbour.",
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "BGP group config (NETCONF)",
+      "description": "naf profile NAF_CONFIG (get-configuration protocols bgp, 30 s): configured peer-as and import policy per group. Last 90 s only, so removed leaves disappear.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"cfg_peer_as\") AS \"Configured peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "bgp_group": "BGP group"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "no BGP config collected"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 40,
       "gridPos": {
         "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 94
+        "w": 10,
+        "x": 14,
+        "y": 110
       },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "state-timeline",
+      "title": "BGP session state",
+      "description": "gNMI on_change session-state per device and neighbour.",
       "targets": [
         {
           "datasource": {
@@ -2348,23 +2843,522 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "timeseries",
-      "title": "Received prefixes vs rx_max (prefix-limit)",
-      "id": 36,
+      "id": 41,
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 116
+      },
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "row",
+      "title": "NAF \u00b7 troubleshooting-drift",
+      "id": 42,
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 8,
-        "w": 14,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 100
+        "y": 121
+      }
+    },
+    {
+      "type": "table",
+      "title": "Debug config present (BGP traceoptions)",
+      "description": "naf profile NAF_TRACE (get-configuration protocols bgp traceoptions, 30 s). A row means traceoptions are configured on that device. Intent: traceoptions_allowed=false unless a maintenance window is open.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"bgp_trace_file\") AS \"Trace file\" FROM \"NAF_TRACE\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "SHORTNAME": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "\u2714 no BGP traceoptions on any device"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trace file"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": ".+",
+                      "result": {
+                        "color": "red",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
       },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 43,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 122
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Logging intent and maintenance windows",
+      "description": "naf_intent usecase=troubleshooting-drift (re-seed after every intent change). window_open=true \u2192 the orchestrator answers within-policy.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"traceoptions_allowed\") AS \"Traceoptions allowed\", last(\"window_open\") AS \"Window open\" FROM \"naf_intent\" WHERE \"usecase\" = 'troubleshooting-drift' GROUP BY \"device\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "device": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Window open"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "false": {
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Traceoptions allowed"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "true": {
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "false": {
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 44,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 122
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "bargauge",
+      "title": "Log file size",
+      "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"log_file_size\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"log_file\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME $tag_log_file"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "max": 10485760,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 5242880
+              },
+              {
+                "color": "red",
+                "value": 9437184
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 45,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 122
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "timeseries",
+      "title": "Log growth (bytes/s)",
+      "description": "Rate of NAF_LOGFILES.log_file_size. bgp.log growing = traceoptions active; messages jumps with 'any any'. Baseline messages growth comes from openJTS's own NETCONF polling (interactive-commands any). Negative rates (rotation) are hidden.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT mean(\"log_file_size_rate\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter AND \"log_file_size_rate\" >= 0 GROUP BY time($__interval), \"SHORTNAME\", \"log_file\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME $tag_log_file"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 46,
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 0,
+        "y": 128
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Latest commit",
+      "description": "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises troubleshooting-drift:<device>.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Last commit\", last(\"commit_epoch\") * 1000 AS \"Age\", last(\"commit_user\") AS \"User\", last(\"commit_client\") AS \"Client\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "SHORTNAME": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last commit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Age"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 47,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 128
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "row",
+      "title": "NAF \u00b7 prefix-limit",
+      "id": 48,
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 135
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Received prefixes vs rx_max",
+      "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
       "targets": [
         {
           "datasource": {
@@ -2381,7 +3375,6 @@
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "decimals": 0,
           "min": 0,
           "color": {
             "mode": "palette-classic"
@@ -2412,7 +3405,8 @@
             "thresholdsStyle": {
               "mode": "line+area"
             }
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
@@ -2431,23 +3425,214 @@
           "sort": "desc"
         }
       },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "Prefix intent (prefix-limit)",
-      "id": 37,
+      "id": 49,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 136
+      },
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "timeseries",
+      "title": "Pre-policy vs accepted (clamp effect)",
+      "description": "safi_received_pre_policy (what the neighbour sends) vs safi_received (what passes the import policy). After the IMPORT-CLAMP the lines split: ~205 sent, 3 accepted.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"safi_received_pre_policy\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address pre-policy"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"safi_received\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address accepted"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 50,
       "gridPos": {
         "h": 8,
-        "w": 10,
-        "x": 14,
-        "y": 100
+        "w": 12,
+        "x": 12,
+        "y": 136
       },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Import clamp (compensating action)",
+      "description": "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> = the orchestrator's compensating action is in place; it stays until a human removes it.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"cfg_peer_as\") AS \"peer-as\", last(\"cfg_import\") AS \"Import policy\" FROM \"NAF_CONFIG\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"bgp_group\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "peer-as": true
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "bgp_group": "BGP group"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Import policy"
+            },
+            "properties": [
+              {
+                "id": "noValue",
+                "value": "none"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": "^IMPORT-CLAMP.*",
+                      "result": {
+                        "color": "orange",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 51,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 144
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Prefix intent",
+      "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
       "targets": [
         {
           "datasource": {
@@ -2501,23 +3686,36 @@
           "fields": ""
         }
       },
-      "pluginVersion": "10.3.1"
-    },
-    {
-      "type": "table",
-      "title": "csrx rule order: actual vs intent (security-policy-drift, deferred)",
-      "id": 38,
+      "id": 52,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 144
+      },
       "datasource": {
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (docs/OPEN-QUESTIONS.md Q1).",
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "row",
+      "title": "NAF \u00b7 security-policy-drift (deferred)",
+      "id": 53,
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
-        "h": 6,
+        "h": 1,
         "w": 24,
         "x": 0,
-        "y": 108
-      },
+        "y": 150
+      }
+    },
+    {
+      "type": "table",
+      "title": "csrx rule order: actual vs intent",
+      "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
       "targets": [
         {
           "datasource": {
@@ -2566,12 +3764,14 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "unit": "none",
           "custom": {
             "align": "auto",
             "cellOptions": {
               "type": "auto"
             }
-          }
+          },
+          "noValue": "deferred: csrx has no zones/policies yet"
         },
         "overrides": []
       },
@@ -2585,6 +3785,337 @@
           ],
           "fields": ""
         }
+      },
+      "id": 54,
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 151
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "row",
+      "title": "NAF \u00b7 swap-a-block",
+      "id": 55,
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 156
+      }
+    },
+    {
+      "type": "table",
+      "title": "Collector A: openJTS profile (COMMIT poll)",
+      "description": "naf profile COMMIT, the default Collector for troubleshooting-drift.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"commit_user\") AS \"User\" FROM \"COMMIT\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "SHORTNAME": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Newest commit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 56,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 157
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Collector B: Python poller (naf_commit)",
+      "description": "collector/netconf_poller.py, the alternative Collector component. Same values as A when it runs.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"commit_epoch\") * 1000 AS \"Newest commit\", last(\"user\") AS \"User\" FROM \"naf_commit\" WHERE $timeFilter GROUP BY \"device\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "device": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "poller not running"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Newest commit"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 57,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 157
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Collector C: syslog push (naf_syslog)",
+      "description": "telegraf_naf_syslog (compose profile naf-syslog): UI_COMMIT_COMPLETED pushed by the devices. Arrives ~5 s after a commit instead of ~30 s.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT count(\"message\") AS \"Commit messages\", last(\"message\") AS \"Last message\" FROM \"naf_syslog\" WHERE $timeFilter GROUP BY \"hostname\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "hostname": "Device"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "syslog Collector not active"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 58,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 157
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
+    },
+    {
+      "type": "table",
+      "title": "Which Intent backend and Executor acted",
+      "description": "naf_event decisions that reached the Executor (pending / remediated / no-drift), grouped by the Intent backend and Executor in use. Same id, plan and diff whatever the blocks.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT count(\"count\") AS \"Decisions\" FROM \"naf_event\" WHERE $timeFilter AND \"kind\" =~ /^(pending|remediated|no-drift)$/ GROUP BY \"intent_backend\", \"executor\", \"kind\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "intent_backend": "Intent",
+              "executor": "Executor",
+              "kind": "Decision"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "no executor decisions in range"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "id": 59,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 163
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
       },
       "pluginVersion": "10.3.1"
     }
@@ -2666,7 +4197,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 11,
+  "version": 13,
   "weekStart": "",
   "id": null
 }

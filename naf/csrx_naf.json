@@ -127,6 +127,17 @@
             }
           ],
           "interval": 30
+        },
+        {
+          "name": "NAF_LOGFILES",
+          "rpc": "<file-list><detail/><path>/var/log/</path></file-list>",
+          "fields": [
+            {
+              "field_path": "/directory-list/directory/file-information[file-name]/file-size",
+              "field_type": "int"
+            }
+          ],
+          "interval": 30
         }
       ]
     }
@@ -282,6 +293,24 @@
           "to": "commit_client"
         }
       ]
+    },
+    {
+      "order": 130,
+      "namepass": [
+        "NAF_LOGFILES"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "file-name",
+          "to": "log_file"
+        },
+        {
+          "type": 1,
+          "from": "file-size",
+          "to": "log_file_size"
+        }
+      ]
     }
   ],
   "enrichment_list": [
@@ -301,6 +330,15 @@
         "SECURITY_FLOW",
         "SECURITY_SPU",
         "COMMIT"
+      ],
+      "family": "csrx",
+      "two_levels": false,
+      "level1_tag": "device"
+    },
+    {
+      "order": 230,
+      "namepass": [
+        "NAF_LOGFILES"
       ],
       "family": "csrx",
       "two_levels": false,
@@ -331,7 +369,9 @@
         "flow_pkts_drop_rate",
         "commit_epoch",
         "commit_user",
-        "commit_client"
+        "commit_client",
+        "log_file_size",
+        "log_file_size_rate"
       ]
     }
   ],
@@ -363,6 +403,20 @@
           "action": "accept"
         }
       ]
+    },
+    {
+      "order": 150,
+      "namepass": [
+        "NAF_LOGFILES"
+      ],
+      "filters": [
+        {
+          "type": 0,
+          "key": "log_file",
+          "pattern": "^(messages|bgp[.]log|interactive-commands)$",
+          "action": "accept"
+        }
+      ]
     }
   ],
   "rate_list": [
@@ -376,6 +430,15 @@
         "flow_pkts_tx",
         "flow_pkts_fwd",
         "flow_pkts_drop"
+      ]
+    },
+    {
+      "order": 510,
+      "namepass": [
+        "NAF_LOGFILES"
+      ],
+      "fields": [
+        "log_file_size"
       ]
     }
   ]

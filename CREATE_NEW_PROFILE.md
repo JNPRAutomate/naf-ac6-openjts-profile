@@ -228,14 +228,40 @@ Build the dashboard in Grafana, then export it as JSON to `dashboard-naf.json`. 
 
 ---
 
-### NAF workshop: "Drift (NAF loop)" row
+### NAF workshop rows (closed-loop KPIs)
 
-The last row of `dashboard-naf.json` belongs to the NAF workshop closed loop (`~/naf-ac6-workshop`).
-Its panels read openJTS data (`NETWORK_INSTANCE_BGP`) **and** measurements written by the workshop
-code: `naf_intent` (intent seeded by `observability/seed_intent.py`) and `naf_secpolicy`
-(`collector/netconf_poller.py`). Without the workshop running, those panels show *No data*.
-The dashboard also has an annotation query on tag `naf` that shows orchestrator remediations.
-The commit panel for that loop is the existing **Latest commit** table.
+The bottom of `dashboard-naf.json` belongs to the NAF workshop closed loop (`~/naf-ac6-workshop`):
+one row for the orchestrator and one row per use case. **Do not edit those panels by hand.**
+Regenerate them with `python3 tools/naf_drift_rows.py`. The script is idempotent and never touches
+the panels above the first NAF row. Then rebuild and deploy the `.tgz`.
+
+| Row | KPIs | Data |
+|---|---|---|
+| NAF loop · Orchestrator decisions | autonomy level, decisions by kind, alert level per use case, decision log, remediation annotations | `naf_event` (orchestrator, `ORCH_INFLUX_EVENTS=true`), annotations tag `naf` |
+| NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
+| NAF · troubleshooting-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
+| NAF · prefix-limit | received vs rx_max (40/50 thresholds), pre-policy vs accepted, import clamp present, prefix intent | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
+| NAF · security-policy-drift (deferred) | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
+| NAF · swap-a-block | newest commit per Collector (profile / Python poller / syslog push), which Intent backend + Executor acted | `COMMIT`, `naf_commit`, `naf_syslog`, `naf_event` |
+
+Collection items added to the profile for these rows (NETCONF, every 30 s):
+
+| Measurement | Families | RPC | Tags → fields |
+|---|---|---|---|
+| `NAF_CONFIG` | crpd | `<get-configuration>` filtered to `protocols bgp` | `bgp_group` → `cfg_peer_as` (int), `cfg_import` (string, absent when no import policy) |
+| `NAF_TRACE` | crpd | `<get-configuration>` filtered to `protocols bgp traceoptions` | → `bgp_trace_file` (string). **No point at all** when traceoptions are absent |
+| `NAF_LOGFILES` | crpd, csrx | `<file-list><detail/><path>/var/log/</path></file-list>` | `log_file` (filtered to `messages`, `bgp.log`, `interactive-commands`) → `log_file_size`, `log_file_size_rate` (rate processor) |
+
+Config leaves that disappear (an import policy removed, traceoptions deleted) produce no new value.
+Their panels therefore query only the last 90 s (`time > now() - 90s`) instead of the dashboard range.
+The syslog level (`messages any any`) cannot be collected this way: Junos encodes it as an empty
+element (`<any/>`), which the XPath-lite cannot read. The `messages` growth rate is the KPI instead.
+
+> **Pitfall: no backslashes in filter or regex patterns.** JTSO copies `pattern` into a TOML
+> double-quoted string, so `bgp\.log` becomes the invalid TOML escape `\.`. **Every** Telegraf of
+> that family then refuses to start (`invalid TOML syntax`), and all collection stops until the
+> profile is fixed. Use a character class instead: `bgp[.]log`. Check after each deploy:
+> `docker logs --since 2m telegraf_crpd 2>&1 | grep 'E!'`.
 
 ## 6. Package and deploy
 
