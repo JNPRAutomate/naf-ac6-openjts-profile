@@ -75,7 +75,7 @@ input (gNMI / NETCONF) → rename → filtering → enrichment → regex → rat
 
 ### Kapacitor alerting (commit change)
 
-Both `crpd_naf.json` and `csrx_naf.json` poll `<get-commit-information>` over NETCONF every 60 s into the `COMMIT` measurement:
+Both `crpd_naf.json` and `csrx_naf.json` poll `<get-commit-information>` over NETCONF every 30 s into the `COMMIT` measurement:
 
 - `commit-history[sequence-number]` becomes the tag `commit_seq`. Only `commit_seq = 0` (the latest commit) is kept, so a device writes one point per poll instead of up to 50.
 - `date-time` uses the `epoch` field type. The plugin's `time_layout` (`2006-01-02 15:04:05 MST`) parses Junos `2026-10-22 14:19:11 UTC` into Unix seconds, stored as `commit_epoch`. `user` and `client` are stored as `commit_user` and `commit_client`.
@@ -87,7 +87,7 @@ Both `crpd_naf.json` and `csrx_naf.json` poll `<get-commit-information>` over NE
 
 The dashboard's **Latest commit** table (below *Device inventory*) shows one row per device with the commit time (`commit_epoch * 1000`, unit `dateTimeAsIso`), its age (`dateTimeFromNow`), the user and the client. Rows are sorted with the most recent commit first.
 
-To get Slack, email, webhook or similar notifications, add a handler to the `|alert()` node, for example `.post('http://...')` or `.slack()` once Slack is configured in `kapacitor.conf`. Because polling runs every 60 s, there is up to 60 s of delay, and several commits made within one poll interval produce a single alert. The first point after the task starts is used as the baseline and never alerts.
+To get Slack, email, webhook or similar notifications, add a handler to the `|alert()` node, for example `.post('http://...')` or `.slack()` once Slack is configured in `kapacitor.conf`. Because polling runs every 30 s, there is up to 30 s of delay, and several commits made within one poll interval produce a single alert. The first point after the task starts is used as the baseline and never alerts.
 
 > **JTSO v1.2.3 bug: duplicate tasks.** JTSO queues the TICKscript once **per router** that uses the profile, instead of once per script. With pe1, pe2 and the cSRX, you get 3 identical tasks (`jts_tick_0..2`), which means 3 alerts per commit. JTSO only keeps track of the last task, so the others are never removed. After each deployment, and after each JTSO restart (JTSO wipes and recreates all tasks at startup), remove the extra tasks and keep the highest-numbered one:
 >
