@@ -2144,19 +2144,19 @@
     },
     {
       "type": "state-timeline",
-      "title": "Alert level per use case and device",
-      "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per use case / device.",
+      "title": "Alert level per alert type and device",
+      "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per alert type (first part of the alert id) / device. config-change means 'a commit happened'; the logging-drift planner checks it. Decisions where the planner found nothing to fix (no-drift, within-policy) are left out.",
       "targets": [
         {
           "datasource": {
             "type": "influxdb",
             "uid": "jtsuid"
           },
-          "query": "SELECT last(\"level\") FROM \"naf_event\" WHERE $timeFilter AND \"kind\" != 'autonomy-changed' GROUP BY time($__interval), \"usecase\", \"device\" fill(previous)",
+          "query": "SELECT last(\"level\") FROM \"naf_event\" WHERE $timeFilter AND \"event\" != '' AND \"kind\" !~ /^(autonomy-changed|no-drift|within-policy)$/ GROUP BY time($__interval), \"event\", \"device\" fill(previous)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
-          "alias": "$tag_usecase \u00b7 $tag_device"
+          "alias": "$tag_event \u00b7 $tag_device"
         }
       ],
       "fieldConfig": {
@@ -2794,7 +2794,7 @@
     },
     {
       "type": "row",
-      "title": "NAF \u00b7 troubleshooting-drift",
+      "title": "NAF \u00b7 logging-drift",
       "id": 42,
       "collapsed": true,
       "panels": [
@@ -2901,14 +2901,14 @@
         {
           "type": "table",
           "title": "Logging intent and maintenance windows",
-          "description": "naf_intent usecase=troubleshooting-drift (re-seed after every intent change). window_open=true \u2192 the orchestrator answers within-policy.",
+          "description": "naf_intent usecase=logging-drift (re-seed after every intent change). window_open=true \u2192 the orchestrator answers within-policy.",
           "targets": [
             {
               "datasource": {
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"traceoptions_allowed\") AS \"Traceoptions allowed\", last(\"window_open\") AS \"Window open\" FROM \"naf_intent\" WHERE \"usecase\" = 'troubleshooting-drift' GROUP BY \"device\"",
+              "query": "SELECT last(\"traceoptions_allowed\") AS \"Traceoptions allowed\", last(\"window_open\") AS \"Window open\" FROM \"naf_intent\" WHERE \"usecase\" = 'logging-drift' GROUP BY \"device\"",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "table"
@@ -3180,7 +3180,7 @@
         {
           "type": "table",
           "title": "Latest commit",
-          "description": "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises troubleshooting-drift:<device>.",
+          "description": "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises config-change:<device>.",
           "targets": [
             {
               "datasource": {
@@ -3747,7 +3747,7 @@
         {
           "type": "table",
           "title": "Collector A: openJTS profile (COMMIT poll)",
-          "description": "naf profile COMMIT, the default Collector for troubleshooting-drift.",
+          "description": "naf profile COMMIT, the default Collector for logging-drift.",
           "targets": [
             {
               "datasource": {
@@ -4137,7 +4137,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 17,
+  "version": 21,
   "weekStart": "",
   "id": null
 }
