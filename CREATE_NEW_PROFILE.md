@@ -245,7 +245,7 @@ from the script or in the JSON, never by saving from the UI.
 |---|---|---|
 | NAF loop · Orchestrator decisions | autonomy level, decisions by kind, alert level per use case, decision log, remediation annotations | `naf_event` (orchestrator, `ORCH_INFLUX_EVENTS=true`), annotations tag `naf` |
 | NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
-| NAF · troubleshooting-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
+| NAF · logging-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
 | NAF · prefix-limit | received vs rx_max (40/50 thresholds), pre-policy vs accepted, import clamp present, prefix intent | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
 | NAF · security-policy-drift (deferred) | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
 | NAF · swap-a-block | newest commit per Collector (profile / Python poller / syslog push), which Intent backend + Executor acted | `COMMIT`, `naf_commit`, `naf_syslog`, `naf_event` |

@@ -133,10 +133,13 @@ def build(y: int, first_id: int) -> list[dict]:
            "options": {"onlyFromThisDashboard": False, "onlyInTimeRange": False, "tags": ["naf"], "limit": 10,
                        "showUser": False, "showTime": True, "showTags": True, "navigateToPanel": False,
                        "navigateBefore": "10m", "navigateAfter": "10m"}}, 12, 7)
-    L.add({"type": "state-timeline", "title": "Alert level per use case and device",
-           "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per use case / device.",
-           "targets": [q("A", 'SELECT last("level") FROM "naf_event" WHERE $timeFilter AND "kind" != \'autonomy-changed\' '
-                              'GROUP BY time($__interval), "usecase", "device" fill(previous)', "time_series", "$tag_usecase · $tag_device")],
+    L.add({"type": "state-timeline", "title": "Alert level per alert type and device",
+           "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per alert type "
+                          "(first part of the alert id) / device. config-change means 'a commit happened'; the logging-drift "
+                          "planner checks it. Decisions where the planner found nothing to fix (no-drift, within-policy) are left out.",
+           "targets": [q("A", 'SELECT last("level") FROM "naf_event" WHERE $timeFilter AND "event" != \'\' '
+                              'AND "kind" !~ /^(autonomy-changed|no-drift|within-policy)$/ '
+                              'GROUP BY time($__interval), "event", "device" fill(previous)', "time_series", "$tag_event · $tag_device")],
            "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "text", "value": None}]},
                                         "mappings": [{"type": "value", "options": {k: {"color": c, "index": i} for i, (k, c) in enumerate(LEVEL_MAP.items())}}],
                                         "custom": {"fillOpacity": 80, "lineWidth": 0}}, "overrides": []},
@@ -188,8 +191,8 @@ def build(y: int, first_id: int) -> list[dict]:
                                         "custom": {"fillOpacity": 80, "lineWidth": 0}}, "overrides": []},
            "options": STATE_TL_OPTS}, 24, 5)
 
-    # ---------------- troubleshooting-drift ----------------
-    L.row("NAF · troubleshooting-drift")
+    # ---------------- logging-drift ----------------
+    L.row("NAF · logging-drift")
     L.add(table("Debug config present (BGP traceoptions)",
                 "naf profile NAF_TRACE (get-configuration protocols bgp traceoptions, 30 s). A row means traceoptions are configured on that device. Intent: traceoptions_allowed=false unless a maintenance window is open.",
                 [q("A", f'SELECT last("bgp_trace_file") AS "Trace file" FROM "NAF_TRACE" WHERE {DEV} AND {NOW} GROUP BY "SHORTNAME"')],
@@ -197,8 +200,8 @@ def build(y: int, first_id: int) -> list[dict]:
                  {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"SHORTNAME": "Device"}}}],
                 [color_map("Trace file", {}, other="red")], no_value="✔ no BGP traceoptions on any device"), 8, 6)
     L.add(table("Logging intent and maintenance windows",
-                "naf_intent usecase=troubleshooting-drift (re-seed after every intent change). window_open=true → the orchestrator answers within-policy.",
-                [q("A", 'SELECT last("traceoptions_allowed") AS "Traceoptions allowed", last("window_open") AS "Window open" FROM "naf_intent" WHERE "usecase" = \'troubleshooting-drift\' GROUP BY "device"')],
+                "naf_intent usecase=logging-drift (re-seed after every intent change). window_open=true → the orchestrator answers within-policy.",
+                [q("A", 'SELECT last("traceoptions_allowed") AS "Traceoptions allowed", last("window_open") AS "Window open" FROM "naf_intent" WHERE "usecase" = \'logging-drift\' GROUP BY "device"')],
                 [{"id": "merge", "options": {}},
                  {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"device": "Device"}}}],
                 [color_map("Window open", {"true": "orange", "false": "green"}),
@@ -218,7 +221,7 @@ def build(y: int, first_id: int) -> list[dict]:
                              'GROUP BY time($__interval), "SHORTNAME", "log_file" fill(none)', "time_series", "$tag_SHORTNAME $tag_log_file")],
                      unit="Bps"), 16, 7)
     L.add(table("Latest commit",
-                "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises troubleshooting-drift:<device>.",
+                "openJTS naf profile COMMIT (get-commit-information, newest entry, 30 s). Every change of commit time raises config-change:<device>.",
                 [q("A", f'SELECT last("commit_epoch") * 1000 AS "Last commit", last("commit_epoch") * 1000 AS "Age", last("commit_user") AS "User", last("commit_client") AS "Client" FROM "COMMIT" WHERE {DEV} AND $timeFilter GROUP BY "SHORTNAME"')],
                 [{"id": "merge", "options": {}},
                  {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"SHORTNAME": "Device"}}}],
@@ -267,7 +270,7 @@ def build(y: int, first_id: int) -> list[dict]:
     # ---------------- swap-a-block ----------------
     L.row("NAF · swap-a-block")
     L.add(table("Collector A: openJTS profile (COMMIT poll)",
-                "naf profile COMMIT, the default Collector for troubleshooting-drift.",
+                "naf profile COMMIT, the default Collector for logging-drift.",
                 [q("A", f'SELECT last("commit_epoch") * 1000 AS "Newest commit", last("commit_user") AS "User" FROM "COMMIT" WHERE {DEV} AND $timeFilter GROUP BY "SHORTNAME"')],
                 [{"id": "merge", "options": {}}, {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"SHORTNAME": "Device"}}}],
                 [{"matcher": {"id": "byName", "options": "Newest commit"}, "properties": [{"id": "unit", "value": "dateTimeAsIso"}]}]), 8, 6)
