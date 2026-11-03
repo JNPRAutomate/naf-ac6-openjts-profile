@@ -3035,14 +3035,14 @@
         {
           "type": "bargauge",
           "title": "Log file size",
-          "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size).",
+          "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size). Current files only (last 90 s, independent of the time range): a deleted file disappears.",
           "targets": [
             {
               "datasource": {
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"log_file_size\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"log_file\"",
+              "query": "SELECT last(\"log_file_size\") FROM \"NAF_LOGFILES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND time > now() - 90s GROUP BY \"SHORTNAME\", \"log_file\"",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
@@ -4137,7 +4137,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 21,
+  "version": 22,
   "weekStart": "",
   "id": null
 }
