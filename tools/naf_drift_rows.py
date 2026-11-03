@@ -180,7 +180,9 @@ def build(y: int, first_id: int) -> list[dict]:
                 "naf profile NAF_CONFIG (get-configuration protocols bgp, 30 s): configured peer-as and import policy per group. Last 90 s only, so removed leaves disappear.",
                 [q("A", f'SELECT last("cfg_peer_as") AS "Configured peer-as", last("cfg_import") AS "Import policy" FROM "NAF_CONFIG" WHERE {DEV} AND {NOW} GROUP BY "SHORTNAME", "bgp_group"')],
                 [{"id": "merge", "options": {}},
-                 {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
+                 {"id": "organize", "options": {"excludeByName": {"Time": True},
+                                                "indexByName": {"SHORTNAME": 0, "bgp_group": 1, "Configured peer-as": 2, "Import policy": 3},
+                                                "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
                 no_value="no BGP config collected"), 10, 6)
     L.add({"type": "state-timeline", "title": "BGP session state",
            "description": "gNMI on_change session-state per device and neighbour.",
@@ -230,11 +232,23 @@ def build(y: int, first_id: int) -> list[dict]:
 
     # ---------------- prefix-limit ----------------
     L.row("NAF · prefix-limit")
-    L.add(timeseries("Received prefixes vs rx_max",
-                     "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
-                     [q("A", f'SELECT last("safi_received") FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND "neighbor_afi_safi_name" = \'IPV4_UNICAST\' AND $timeFilter '
-                             'GROUP BY time($__interval), "SHORTNAME", "neighbor_address" fill(previous)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address")],
-                     thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 40}, {"color": "red", "value": 50}], decimals=0), 12, 8)
+    rx = timeseries("RX prefixes vs. MAX RX prefixes",
+                    "RX prefixes: openJTS gNMI safi_received (accepted after import policy, IPV4_UNICAST), one line per session. "
+                    "MAX RX prefixes (dashed red): the maximum RX prefixes in intent (naf_intent, hidden dashboard variable $max_rx_prefixes). "
+                    "Threshold lines: 40 = WARNING (80 % of MAX RX prefixes), 50 = CRITICAL (MAX RX prefixes). "
+                    "Above 50 the router tears the session down (accepted-prefix-limit), so the line drops to 0 while the session flaps: see Session resets sent. Kapacitor task prefix_limit.",
+                    [q("A", f'SELECT last("safi_received") FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND "neighbor_afi_safi_name" = \'IPV4_UNICAST\' AND $timeFilter '
+                            'GROUP BY time($__interval), "SHORTNAME", "neighbor_address" fill(previous)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address"),
+                     q("B", 'SELECT last("safi_received") * 0 + $max_rx_prefixes AS "MAX RX prefixes" FROM "NETWORK_INSTANCE_BGP" '
+                            'WHERE "neighbor_afi_safi_name" = \'IPV4_UNICAST\' AND $timeFilter GROUP BY time($__interval) fill(previous)',
+                       "time_series", "MAX RX prefixes")],
+                    thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 40}, {"color": "red", "value": 50}], decimals=0)
+    rx["fieldConfig"]["defaults"]["custom"]["axisLabel"] = "RX prefixes"
+    rx["fieldConfig"]["overrides"] = [{"matcher": {"id": "byName", "options": "MAX RX prefixes"}, "properties": [
+        {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
+        {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [10, 10]}},
+        {"id": "custom.fillOpacity", "value": 0}]}]
+    L.add(rx, 12, 8)
     L.add(timeseries("Pre-policy vs accepted (clamp effect)",
                      "safi_received_pre_policy (what the neighbour sends) vs safi_received (what passes the import policy). After the IMPORT-CLAMP the lines split: ~205 sent, 3 accepted.",
                      [q("A", f'SELECT last("safi_received_pre_policy") FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND "neighbor_afi_safi_name" = \'IPV4_UNICAST\' AND $timeFilter '
@@ -243,19 +257,37 @@ def build(y: int, first_id: int) -> list[dict]:
                              'GROUP BY time($__interval), "SHORTNAME", "neighbor_address" fill(previous)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address accepted")],
                      decimals=0), 12, 8)
     L.add(table("Import clamp (compensating action)",
-                "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> = the orchestrator's compensating action is in place; it stays until a human removes it.",
+                "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> (orange) = the orchestrator's compensating action is in place; it stays until a human removes it. "
+                "INPUT-POLICY-ONLY-<peer> (green) = the intended import policy of intent v2 (scripts/update_intent.py).",
                 [q("A", f'SELECT last("cfg_peer_as") AS "peer-as", last("cfg_import") AS "Import policy" FROM "NAF_CONFIG" WHERE {DEV} AND {NOW} GROUP BY "SHORTNAME", "bgp_group"')],
                 [{"id": "merge", "options": {}},
-                 {"id": "organize", "options": {"excludeByName": {"Time": True, "peer-as": True}, "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
+                 {"id": "organize", "options": {"excludeByName": {"Time": True, "peer-as": True},
+                                                "indexByName": {"SHORTNAME": 0, "bgp_group": 1, "Import policy": 2},
+                                                "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
                 [{"matcher": {"id": "byName", "options": "Import policy"}, "properties": [
                     {"id": "noValue", "value": "none"},
-                    {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^IMPORT-CLAMP.*", "result": {"color": "orange", "index": 0}}}]},
+                    {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
+                    {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^IMPORT-CLAMP.*", "result": {"color": "orange", "index": 0}}},
+                                                 {"type": "regex", "options": {"pattern": "^INPUT-POLICY.*", "result": {"color": "green", "index": 1}}}]},
                     {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}]), 12, 6)
     L.add(table("Prefix intent",
-                "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
-                [q("A", 'SELECT last("rx_min") AS "rx_min", last("rx_max") AS "rx_max" FROM "naf_intent" WHERE "usecase" = \'prefix-limit\' GROUP BY "device", "neighbor_address"')],
-                [{"id": "merge", "options": {}},
-                 {"id": "organize", "options": {"excludeByName": {"Time": True}, "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 6)
+                "naf_intent usecase=prefix-limit (minimum and maximum RX prefixes per device and neighbour) and the intended import policy "
+                "(usecase=bgp-peer-drift; 'none' in intent v1, INPUT-POLICY-ONLY-<peer> after scripts/update_intent.py).",
+                [q("A", 'SELECT last("rx_min") AS "Minimum RX prefixes", last("rx_max") AS "Maximum RX prefixes" FROM "naf_intent" WHERE "usecase" = \'prefix-limit\' GROUP BY "device", "neighbor_address"'),
+                 q("B", 'SELECT last("import_policy") AS "Intended import policy" FROM "naf_intent" WHERE "usecase" = \'bgp-peer-drift\' GROUP BY "device", "neighbor_address"')],
+                [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
+                 {"id": "organize", "options": {"indexByName": {"device": 0, "neighbor_address": 1, "Minimum RX prefixes": 2,
+                                                                "Maximum RX prefixes": 3, "Intended import policy": 4},
+                                                "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 6)
+    resets = timeseries("Session resets sent (prefix-limit teardown)",
+                        "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). "
+                        "Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. "
+                        "Kapacitor prefix_limit raises CRITICAL at 2 or more in 2 min, if the session also reached Established 2 or more times (session_flaps).",
+                        [q("A", f'SELECT non_negative_difference(last("session_notif_sent")) FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND $timeFilter '
+                                'GROUP BY time(1m), "SHORTNAME", "neighbor_address" fill(none)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address")],
+                        thresholds=[{"color": "green", "value": None}, {"color": "red", "value": 2}], decimals=0)
+    resets["fieldConfig"]["defaults"]["custom"].update(drawStyle="bars", fillOpacity=60, spanNulls=False)
+    L.add(resets, 24, 7)
 
     # ---------------- security-policy-drift ----------------
     L.row("NAF · security-policy-drift (deferred)")
@@ -264,7 +296,9 @@ def build(y: int, first_id: int) -> list[dict]:
                 [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE $timeFilter GROUP BY "device", "from_zone", "to_zone"'),
                  q("B", 'SELECT last("rule_order") AS "Intended order", last("rule_count") AS "Intended rules" FROM "naf_intent" WHERE "usecase" = \'security-policy-drift\' GROUP BY "device", "from_zone", "to_zone"')],
                 [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
-                 {"id": "organize", "options": {"renameByName": {"device": "Device", "from_zone": "From zone", "to_zone": "To zone"}}}],
+                 {"id": "organize", "options": {"indexByName": {"device": 0, "from_zone": 1, "to_zone": 2, "Actual order": 3, "Intended order": 4,
+                                                                "Actual rules": 5, "Intended rules": 6},
+                                                "renameByName": {"device": "Device", "from_zone": "From zone", "to_zone": "To zone"}}}],
                 no_value="deferred: csrx has no zones/policies yet"), 24, 5)
 
     # ---------------- swap-a-block ----------------
@@ -363,6 +397,14 @@ def main() -> None:
     if not any(a.get("name") == "NAF remediations" for a in anns):
         anns.append({"datasource": {"type": "datasource", "uid": "grafana"}, "enable": True, "hide": False, "iconColor": "purple",
                      "name": "NAF remediations", "target": {"limit": 100, "matchAny": False, "tags": ["naf"], "type": "tags"}})
+    tvars = d.setdefault("templating", {}).setdefault("list", [])
+    tvars[:] = [v for v in tvars if v.get("name") != "max_rx_prefixes"] + [{
+        # hidden: maximum RX prefixes from intent, drawn as the "MAX RX prefixes" line (refreshed with the time range)
+        "name": "max_rx_prefixes", "label": "MAX RX prefixes", "type": "query", "hide": 2, "refresh": 2,
+        "datasource": DS, "includeAll": False, "multi": False, "options": [], "current": {}, "regex": "", "sort": 0,
+        "query": 'SELECT max("rx_max") FROM (SELECT last("rx_max") AS "rx_max" FROM "naf_intent" '
+                 'WHERE "usecase" = \'prefix-limit\' GROUP BY "device", "neighbor_address")',
+        "definition": ""}]
     d["version"] = d.get("version", 0) + 1
     d["id"] = None
     DASH.write_text(json.dumps(d, indent=2) + "\n")

@@ -2663,6 +2663,12 @@
                 "excludeByName": {
                   "Time": true
                 },
+                "indexByName": {
+                  "SHORTNAME": 0,
+                  "bgp_group": 1,
+                  "Configured peer-as": 2,
+                  "Import policy": 3
+                },
                 "renameByName": {
                   "SHORTNAME": "Device",
                   "bgp_group": "BGP group"
@@ -3287,8 +3293,8 @@
       "panels": [
         {
           "type": "timeseries",
-          "title": "Received prefixes vs rx_max",
-          "description": "openJTS gNMI safi_received (post-policy, IPV4_UNICAST). Threshold lines: 40 = WARNING (80 % of rx_max), 50 = CRITICAL (intent rx_max). Kapacitor task prefix_limit.",
+          "title": "RX prefixes vs. MAX RX prefixes",
+          "description": "RX prefixes: openJTS gNMI safi_received (accepted after import policy, IPV4_UNICAST), one line per session. MAX RX prefixes (dashed red): the maximum RX prefixes in intent (naf_intent, hidden dashboard variable $max_rx_prefixes). Threshold lines: 40 = WARNING (80 % of MAX RX prefixes), 50 = CRITICAL (MAX RX prefixes). Above 50 the router tears the session down (accepted-prefix-limit), so the line drops to 0 while the session flaps: see Session resets sent. Kapacitor task prefix_limit.",
           "targets": [
             {
               "datasource": {
@@ -3300,6 +3306,17 @@
               "refId": "A",
               "resultFormat": "time_series",
               "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"safi_received\") * 0 + $max_rx_prefixes AS \"MAX RX prefixes\" FROM \"NETWORK_INSTANCE_BGP\" WHERE \"neighbor_afi_safi_name\" = 'IPV4_UNICAST' AND $timeFilter GROUP BY time($__interval) fill(previous)",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "alias": "MAX RX prefixes"
             }
           ],
           "fieldConfig": {
@@ -3334,11 +3351,42 @@
                 "spanNulls": true,
                 "thresholdsStyle": {
                   "mode": "line+area"
-                }
+                },
+                "axisLabel": "RX prefixes"
               },
               "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "MAX RX prefixes"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "red"
+                    }
+                  },
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "dash",
+                      "dash": [
+                        10,
+                        10
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.fillOpacity",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
           },
           "options": {
             "legend": {
@@ -3457,7 +3505,7 @@
         {
           "type": "table",
           "title": "Import clamp (compensating action)",
-          "description": "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> = the orchestrator's compensating action is in place; it stays until a human removes it.",
+          "description": "NAF_CONFIG.cfg_import (last 90 s). IMPORT-CLAMP-<group> (orange) = the orchestrator's compensating action is in place; it stays until a human removes it. INPUT-POLICY-ONLY-<peer> (green) = the intended import policy of intent v2 (scripts/update_intent.py).",
           "targets": [
             {
               "datasource": {
@@ -3481,6 +3529,11 @@
                 "excludeByName": {
                   "Time": true,
                   "peer-as": true
+                },
+                "indexByName": {
+                  "SHORTNAME": 0,
+                  "bgp_group": 1,
+                  "Import policy": 2
                 },
                 "renameByName": {
                   "SHORTNAME": "Device",
@@ -3511,6 +3564,18 @@
                     "value": "none"
                   },
                   {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
                     "id": "mappings",
                     "value": [
                       {
@@ -3520,6 +3585,16 @@
                           "result": {
                             "color": "orange",
                             "index": 0
+                          }
+                        }
+                      },
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": "^INPUT-POLICY.*",
+                          "result": {
+                            "color": "green",
+                            "index": 1
                           }
                         }
                       }
@@ -3562,20 +3637,38 @@
         {
           "type": "table",
           "title": "Prefix intent",
-          "description": "naf_intent usecase=prefix-limit (rx_min / rx_max per device and neighbour).",
+          "description": "naf_intent usecase=prefix-limit (minimum and maximum RX prefixes per device and neighbour) and the intended import policy (usecase=bgp-peer-drift; 'none' in intent v1, INPUT-POLICY-ONLY-<peer> after scripts/update_intent.py).",
           "targets": [
             {
               "datasource": {
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"rx_min\") AS \"rx_min\", last(\"rx_max\") AS \"rx_max\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\"",
+              "query": "SELECT last(\"rx_min\") AS \"Minimum RX prefixes\", last(\"rx_max\") AS \"Maximum RX prefixes\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\"",
               "rawQuery": true,
               "refId": "A",
+              "resultFormat": "table"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"import_policy\") AS \"Intended import policy\" FROM \"naf_intent\" WHERE \"usecase\" = 'bgp-peer-drift' GROUP BY \"device\", \"neighbor_address\"",
+              "rawQuery": true,
+              "refId": "B",
               "resultFormat": "table"
             }
           ],
           "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                }
+              }
+            },
             {
               "id": "merge",
               "options": {}
@@ -3583,8 +3676,12 @@
             {
               "id": "organize",
               "options": {
-                "excludeByName": {
-                  "Time": true
+                "indexByName": {
+                  "device": 0,
+                  "neighbor_address": 1,
+                  "Minimum RX prefixes": 2,
+                  "Maximum RX prefixes": 3,
+                  "Intended import policy": 4
                 },
                 "renameByName": {
                   "device": "Device",
@@ -3628,6 +3725,85 @@
             "uid": "jtsuid"
           },
           "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "timeseries",
+          "title": "Session resets sent (prefix-limit teardown)",
+          "description": "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. Kapacitor prefix_limit raises CRITICAL at 2 or more in 2 min, if the session also reached Established 2 or more times (session_flaps).",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT non_negative_difference(last(\"session_notif_sent\")) FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time(1m), \"SHORTNAME\", \"neighbor_address\" fill(none)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2190 $tag_neighbor_address"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 2
+                  }
+                ]
+              },
+              "custom": {
+                "drawStyle": "bars",
+                "lineWidth": 2,
+                "fillOpacity": 60,
+                "showPoints": "never",
+                "spanNulls": false,
+                "thresholdsStyle": {
+                  "mode": "line+area"
+                }
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 53,
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 92
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
         }
       ],
       "gridPos": {
@@ -3640,7 +3816,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 security-policy-drift (deferred)",
-      "id": 53,
+      "id": 54,
       "collapsed": true,
       "panels": [
         {
@@ -3685,6 +3861,15 @@
             {
               "id": "organize",
               "options": {
+                "indexByName": {
+                  "device": 0,
+                  "from_zone": 1,
+                  "to_zone": 2,
+                  "Actual order": 3,
+                  "Intended order": 4,
+                  "Actual rules": 5,
+                  "Intended rules": 6
+                },
                 "renameByName": {
                   "device": "Device",
                   "from_zone": "From zone",
@@ -3717,7 +3902,7 @@
               "fields": ""
             }
           },
-          "id": 54,
+          "id": 55,
           "gridPos": {
             "h": 5,
             "w": 24,
@@ -3741,7 +3926,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 swap-a-block",
-      "id": 55,
+      "id": 56,
       "collapsed": true,
       "panels": [
         {
@@ -3813,7 +3998,7 @@
               "fields": ""
             }
           },
-          "id": 56,
+          "id": 57,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -3896,7 +4081,7 @@
               "fields": ""
             }
           },
-          "id": 57,
+          "id": 58,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -3966,7 +4151,7 @@
               "fields": ""
             }
           },
-          "id": 58,
+          "id": 59,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4038,7 +4223,7 @@
               "fields": ""
             }
           },
-          "id": 59,
+          "id": 60,
           "gridPos": {
             "h": 6,
             "w": 24,
@@ -4126,6 +4311,25 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
+      },
+      {
+        "name": "max_rx_prefixes",
+        "label": "MAX RX prefixes",
+        "type": "query",
+        "hide": 2,
+        "refresh": 2,
+        "datasource": {
+          "type": "influxdb",
+          "uid": "jtsuid"
+        },
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "current": {},
+        "regex": "",
+        "sort": 0,
+        "query": "SELECT max(\"rx_max\") FROM (SELECT last(\"rx_max\") AS \"rx_max\" FROM \"naf_intent\" WHERE \"usecase\" = 'prefix-limit' GROUP BY \"device\", \"neighbor_address\")",
+        "definition": ""
       }
     ]
   },
@@ -4137,7 +4341,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 22,
+  "version": 31,
   "weekStart": "",
   "id": null
 }

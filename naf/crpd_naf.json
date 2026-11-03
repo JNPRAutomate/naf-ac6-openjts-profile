@@ -45,6 +45,18 @@
           "interval": 0
         },
         {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/established-transitions",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
+          "name": "NETWORK_INSTANCE_BGP",
+          "path": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/messages/sent/NOTIFICATION",
+          "mode": "sample",
+          "interval": 60
+        },
+        {
           "name": "INTERFACES",
           "path": "/interfaces/interface/state/counters",
           "mode": "sample",
@@ -226,6 +238,16 @@
           "type": 1,
           "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/peer-as",
           "to": "session_peer_as"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/established-transitions",
+          "to": "session_flaps"
+        },
+        {
+          "type": 1,
+          "from": "/network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state/messages/sent/NOTIFICATION",
+          "to": "session_notif_sent"
         },
         {
           "type": 1,
@@ -708,6 +730,8 @@
         "session_state",
         "session_peer_as",
         "session_description",
+        "session_flaps",
+        "session_notif_sent",
         "max-prefixes",
         "exception",
         "in_octets_rate",
