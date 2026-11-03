@@ -207,8 +207,8 @@ def build(y: int, first_id: int) -> list[dict]:
                 [color_map("Window open", {"true": "orange", "false": "green"}),
                  color_map("Traceoptions allowed", {"true": "orange", "false": "green"})]), 8, 6)
     L.add({"type": "bargauge", "title": "Log file size",
-           "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size).",
-           "targets": [q("A", f'SELECT last("log_file_size") FROM "NAF_LOGFILES" WHERE {DEV} AND $timeFilter GROUP BY "SHORTNAME", "log_file"',
+           "description": "naf profile NAF_LOGFILES (file list /var/log, 30 s): messages, bgp.log (exists once BGP traceoptions were enabled), interactive-commands. Scale 0-10 MB (archive size). Current files only (last 90 s, independent of the time range): a deleted file disappears.",
+           "targets": [q("A", f'SELECT last("log_file_size") FROM "NAF_LOGFILES" WHERE {DEV} AND {NOW} GROUP BY "SHORTNAME", "log_file"',
                          "time_series", "$tag_SHORTNAME $tag_log_file")],
            "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "max": 10485760, "color": {"mode": "thresholds"},
                                         "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}, {"color": "orange", "value": 5242880},
