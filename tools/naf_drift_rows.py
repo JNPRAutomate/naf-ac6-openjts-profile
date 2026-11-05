@@ -104,6 +104,17 @@ STATE_TL_OPTS = {"showValue": "auto", "mergeValues": True, "rowHeight": 0.8, "al
                  "tooltip": {"mode": "single", "sort": "none"}}
 
 
+def bgp_session_state(desc: str) -> dict:
+    """BGP session state timeline per device and neighbour (used by bgp-peer-drift and prefix-limit)."""
+    return {"type": "state-timeline", "title": "BGP session state", "description": desc,
+            "targets": [q("A", f'SELECT last("session_state") FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND $timeFilter GROUP BY time($__interval), "SHORTNAME", "neighbor_address" fill(previous)',
+                          "time_series", "$tag_SHORTNAME → $tag_neighbor_address")],
+            "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": None}]},
+                                         "mappings": [{"type": "value", "options": {"ESTABLISHED": {"color": "green", "index": 0}}}],
+                                         "custom": {"fillOpacity": 80, "lineWidth": 0}}, "overrides": []},
+            "options": STATE_TL_OPTS}
+
+
 def build(y: int, first_id: int) -> list[dict]:
     L = Layout(y, first_id)
 
@@ -184,14 +195,7 @@ def build(y: int, first_id: int) -> list[dict]:
                                                 "indexByName": {"SHORTNAME": 0, "bgp_group": 1, "Configured peer-as": 2, "Import policy": 3},
                                                 "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
                 no_value="no BGP config collected"), 10, 6)
-    L.add({"type": "state-timeline", "title": "BGP session state",
-           "description": "gNMI on_change session-state per device and neighbour.",
-           "targets": [q("A", f'SELECT last("session_state") FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND $timeFilter GROUP BY time($__interval), "SHORTNAME", "neighbor_address" fill(previous)',
-                         "time_series", "$tag_SHORTNAME → $tag_neighbor_address")],
-           "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": None}]},
-                                        "mappings": [{"type": "value", "options": {"ESTABLISHED": {"color": "green", "index": 0}}}],
-                                        "custom": {"fillOpacity": 80, "lineWidth": 0}}, "overrides": []},
-           "options": STATE_TL_OPTS}, 24, 5)
+    L.add(bgp_session_state("gNMI on_change session-state per device and neighbour."), 24, 5)
 
     # ---------------- logging-drift ----------------
     L.row("NAF · logging-drift")
@@ -287,7 +291,10 @@ def build(y: int, first_id: int) -> list[dict]:
                                 'GROUP BY time(1m), "SHORTNAME", "neighbor_address" fill(none)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address")],
                         thresholds=[{"color": "green", "value": None}, {"color": "red", "value": 2}], decimals=0)
     resets["fieldConfig"]["defaults"]["custom"].update(drawStyle="bars", fillOpacity=60, spanNulls=False)
-    L.add(resets, 24, 7)
+    L.add(resets, 12, 7)
+    L.add(bgp_session_state("gNMI on_change session-state per device and neighbour (same panel as in NAF · bgp-peer-drift). "
+                            "While pe1's accepted-prefix-limit tears the session down, both ends flicker between ESTABLISHED (green) "
+                            "and the other states (red); with the clamp or the fix it stays green."), 12, 7)
 
     # ---------------- security-policy-drift ----------------
     L.row("NAF · security-policy-drift (deferred)")

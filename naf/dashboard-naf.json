@@ -3795,8 +3795,85 @@
           "id": 53,
           "gridPos": {
             "h": 7,
-            "w": 24,
+            "w": 12,
             "x": 0,
+            "y": 92
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "state-timeline",
+          "title": "BGP session state",
+          "description": "gNMI on_change session-state per device and neighbour (same panel as in NAF \u00b7 bgp-peer-drift). While pe1's accepted-prefix-limit tears the session down, both ends flicker between ESTABLISHED (green) and the other states (red); with the clamp or the fix it stays green.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"session_state\") FROM \"NETWORK_INSTANCE_BGP\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"neighbor_address\" fill(previous)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_SHORTNAME \u2192 $tag_neighbor_address"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "ESTABLISHED": {
+                      "color": "green",
+                      "index": 0
+                    }
+                  }
+                }
+              ],
+              "custom": {
+                "fillOpacity": 80,
+                "lineWidth": 0
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showValue": "auto",
+            "mergeValues": true,
+            "rowHeight": 0.8,
+            "alignValue": "left",
+            "legend": {
+              "showLegend": false,
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "id": 54,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
             "y": 92
           },
           "datasource": {
@@ -3816,7 +3893,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 security-policy-drift (deferred)",
-      "id": 54,
+      "id": 55,
       "collapsed": true,
       "panels": [
         {
@@ -3902,7 +3979,7 @@
               "fields": ""
             }
           },
-          "id": 55,
+          "id": 56,
           "gridPos": {
             "h": 5,
             "w": 24,
@@ -3926,7 +4003,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 swap-a-block",
-      "id": 56,
+      "id": 57,
       "collapsed": true,
       "panels": [
         {
@@ -3998,7 +4075,7 @@
               "fields": ""
             }
           },
-          "id": 57,
+          "id": 58,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4081,7 +4158,7 @@
               "fields": ""
             }
           },
-          "id": 58,
+          "id": 59,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4151,7 +4228,7 @@
               "fields": ""
             }
           },
-          "id": 59,
+          "id": 60,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4223,7 +4300,7 @@
               "fields": ""
             }
           },
-          "id": 60,
+          "id": 61,
           "gridPos": {
             "h": 6,
             "w": 24,
@@ -4341,7 +4418,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 31,
+  "version": 32,
   "weekStart": "",
   "id": null
 }
