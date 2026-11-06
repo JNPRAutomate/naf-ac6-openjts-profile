@@ -412,6 +412,10 @@ def main() -> None:
         "query": 'SELECT max("rx_max") FROM (SELECT last("rx_max") AS "rx_max" FROM "naf_intent" '
                  'WHERE "usecase" = \'prefix-limit\' GROUP BY "device", "neighbor_address")',
         "definition": ""}]
+    # Open on every device: a value saved from the Grafana UI (e.g. "csrx") would hide pe1/pe2 panels
+    for v in tvars:
+        if v.get("name") in ("device", "interface"):
+            v["current"] = {"selected": True, "text": ["All"], "value": ["$__all"]}
     d["version"] = d.get("version", 0) + 1
     d["id"] = None
     DASH.write_text(json.dumps(d, indent=2) + "\n")

@@ -4336,10 +4336,10 @@
         "current": {
           "selected": true,
           "text": [
-            "csrx"
+            "All"
           ],
           "value": [
-            "csrx"
+            "$__all"
           ]
         },
         "datasource": {
@@ -4418,7 +4418,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 32,
+  "version": 33,
   "weekStart": "",
   "id": null
 }
