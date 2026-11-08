@@ -291,7 +291,7 @@ def build(y: int, first_id: int) -> list[dict]:
     resets = timeseries("Session resets sent (prefix-limit teardown)",
                         "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). "
                         "Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. "
-                        "Kapacitor prefix_limit raises CRITICAL at 2 or more in 2 min, if the session also reached Established 2 or more times (session_flaps).",
+                        "Kapacitor prefix_limit raises CRITICAL at 2 or more in 3 min, if the session also reached Established 2 or more times (session_flaps).",
                         [q("A", f'SELECT non_negative_difference(last("session_notif_sent")) FROM "NETWORK_INSTANCE_BGP" WHERE {DEV} AND $timeFilter '
                                 'GROUP BY time(1m), "SHORTNAME", "neighbor_address" fill(none)', "time_series", "$tag_SHORTNAME ← $tag_neighbor_address")],
                         thresholds=[{"color": "green", "value": None}, {"color": "red", "value": 2}], decimals=0)
