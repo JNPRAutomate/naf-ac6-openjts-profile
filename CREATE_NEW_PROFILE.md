@@ -279,7 +279,7 @@ element (`<any/>`), which the XPath-lite cannot read. The `messages` growth rate
 ## 6. Package and deploy
 
 ```bash
-cd ~/jts_custom_profiles
+cd ~/naf-ac6-openjts-profile
 # archive name = folder name; list only the profile files (no backups, notes or tokens)
 tar czvf naf.tgz naf/definition.json naf/crpd_naf.json naf/csrx_naf.json naf/dashboard-naf.json naf/commit_change.tick
 cp naf.tgz ~/JTS/compose/jtso/profiles/

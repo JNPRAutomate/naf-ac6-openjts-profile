@@ -65,11 +65,15 @@ def q(ref: str, query: str, fmt: str = "table", alias: str | None = None) -> dic
 def table(title: str, desc: str, targets: list, transformations: list | None = None, overrides: list | None = None,
           no_value: str | None = None) -> dict:
     defaults: dict = {"unit": "none", "custom": {"align": "auto", "cellOptions": {"type": "auto"}}}
+    overrides = list(overrides or [])
     if no_value:
+        # Grafana applies defaults.noValue to every empty cell too; keep the message for an empty
+        # panel only, and show a dash in empty cells (later overrides still win).
         defaults["noValue"] = no_value
+        overrides.insert(0, {"matcher": {"id": "byRegexp", "options": ".*"}, "properties": [{"id": "noValue", "value": "—"}]})
     return {"type": "table", "title": title, "description": desc, "targets": targets,
             "transformations": transformations or [{"id": "merge", "options": {}}],
-            "fieldConfig": {"defaults": defaults, "overrides": overrides or []},
+            "fieldConfig": {"defaults": defaults, "overrides": overrides},
             "options": {"showHeader": True, "cellHeight": "sm", "footer": {"show": False, "reducer": ["sum"], "fields": ""}}}
 
 
@@ -194,6 +198,7 @@ def build(y: int, first_id: int) -> list[dict]:
                  {"id": "organize", "options": {"excludeByName": {"Time": True},
                                                 "indexByName": {"SHORTNAME": 0, "bgp_group": 1, "Configured peer-as": 2, "Import policy": 3},
                                                 "renameByName": {"SHORTNAME": "Device", "bgp_group": "BGP group"}}}],
+                [{"matcher": {"id": "byName", "options": "Import policy"}, "properties": [{"id": "noValue", "value": "none"}]}],
                 no_value="no BGP config collected"), 10, 6)
     L.add(bgp_session_state("gNMI on_change session-state per device and neighbour."), 24, 5)
 

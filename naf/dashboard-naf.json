@@ -2277,6 +2277,18 @@
         "overrides": [
           {
             "matcher": {
+              "id": "byRegexp",
+              "options": ".*"
+            },
+            "properties": [
+              {
+                "id": "noValue",
+                "value": "\u2014"
+              }
+            ]
+          },
+          {
+            "matcher": {
               "id": "byName",
               "options": "Level"
             },
@@ -2687,7 +2699,32 @@
               },
               "noValue": "no BGP config collected"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Import policy"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "none"
+                  }
+                ]
+              }
+            ]
           },
           "options": {
             "showHeader": true,
@@ -2849,6 +2886,18 @@
               "noValue": "\u2714 no BGP traceoptions on any device"
             },
             "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              },
               {
                 "matcher": {
                   "id": "byName",
@@ -3966,7 +4015,20 @@
               },
               "noValue": "deferred: csrx has no zones/policies yet"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              }
+            ]
           },
           "options": {
             "showHeader": true,
@@ -4135,6 +4197,18 @@
             "overrides": [
               {
                 "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              },
+              {
+                "matcher": {
                   "id": "byName",
                   "options": "Newest commit"
                 },
@@ -4215,7 +4289,20 @@
               },
               "noValue": "syslog Collector not active"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              }
+            ]
           },
           "options": {
             "showHeader": true,
@@ -4287,7 +4374,20 @@
               },
               "noValue": "no executor decisions in range"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              }
+            ]
           },
           "options": {
             "showHeader": true,
@@ -4418,7 +4518,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 33,
+  "version": 34,
   "weekStart": "",
   "id": null
 }
