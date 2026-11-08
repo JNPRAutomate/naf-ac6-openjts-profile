@@ -3778,7 +3778,7 @@
         {
           "type": "timeseries",
           "title": "Session resets sent (prefix-limit teardown)",
-          "description": "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. Kapacitor prefix_limit raises CRITICAL at 2 or more in 2 min, if the session also reached Established 2 or more times (session_flaps).",
+          "description": "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. Kapacitor prefix_limit raises CRITICAL at 2 or more in 3 min, if the session also reached Established 2 or more times (session_flaps).",
           "targets": [
             {
               "datasource": {
@@ -4518,7 +4518,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 34,
+  "version": 35,
   "weekStart": "",
   "id": null
 }
