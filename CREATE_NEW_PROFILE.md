@@ -246,7 +246,7 @@ from the script or in the JSON, never by saving from the UI.
 | NAF loop · Orchestrator decisions | autonomy level, decisions by kind, alert level per use case, decision log, remediation annotations | `naf_event` (orchestrator, `ORCH_INFLUX_EVENTS=true`), annotations tag `naf` |
 | NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
 | NAF · logging-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
-| NAF · prefix-limit | received vs rx_max (40/50 thresholds), pre-policy vs accepted, import clamp present, prefix intent | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
+| NAF · prefix-limit | RX prefixes vs. MAX RX prefixes (40/50 thresholds, dashed MAX RX prefixes line from intent via the hidden variable `max_rx_prefixes`), pre-policy vs accepted, import clamp present, prefix intent (minimum / maximum RX prefixes), session resets sent (NOTIFICATIONs per minute) next to the BGP session state | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
 | NAF · security-policy-drift (deferred) | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
 | NAF · swap-a-block | newest commit per Collector (profile / Python poller / syslog push), which Intent backend + Executor acted | `COMMIT`, `naf_commit`, `naf_syslog`, `naf_event` |
 
@@ -257,6 +257,13 @@ Collection items added to the profile for these rows (NETCONF, every 30 s):
 | `NAF_CONFIG` | crpd | `<get-configuration>` filtered to `protocols bgp` | `bgp_group` → `cfg_peer_as` (int), `cfg_import` (string, absent when no import policy) |
 | `NAF_TRACE` | crpd | `<get-configuration>` filtered to `protocols bgp traceoptions` | → `bgp_trace_file` (string). **No point at all** when traceoptions are absent |
 | `NAF_LOGFILES` | crpd, csrx | `<file-list><detail/><path>/var/log/</path></file-list>` | `log_file` (filtered to `messages`, `bgp.log`, `interactive-commands`) → `log_file_size`, `log_file_size_rate` (rate processor) |
+
+gNMI items added to `crpd_naf.json` for these rows (measurement `NETWORK_INSTANCE_BGP`, `sample`, every 60 s):
+
+| Path (under `.../bgp/neighbors/neighbor/state/`) | Field | Used by |
+|---|---|---|
+| `messages/sent/NOTIFICATION` | `session_notif_sent` (counter) | `prefix_limit.tick` CRITICAL when the router keeps tearing the session down (with `session_flaps`); *Session resets sent* panel |
+| `established-transitions` | `session_flaps` (counter) | flap count, grows on both ends of the session; `prefix_limit.tick` requires it so that a session that never comes up does not count |
 
 Config leaves that disappear (an import policy removed, traceoptions deleted) produce no new value.
 Their panels therefore query only the last 90 s (`time > now() - 90s`) instead of the dashboard range.
@@ -272,7 +279,7 @@ element (`<any/>`), which the XPath-lite cannot read. The `messages` growth rate
 ## 6. Package and deploy
 
 ```bash
-cd ~/jts_custom_profiles
+cd ~/naf-ac6-openjts-profile
 # archive name = folder name; list only the profile files (no backups, notes or tokens)
 tar czvf naf.tgz naf/definition.json naf/crpd_naf.json naf/csrx_naf.json naf/dashboard-naf.json naf/commit_change.tick
 cp naf.tgz ~/JTS/compose/jtso/profiles/
