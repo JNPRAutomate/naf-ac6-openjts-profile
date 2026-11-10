@@ -236,14 +236,14 @@ Regenerate them with `python3 tools/naf_drift_rows.py`. The script is idempotent
 the panels above the first NAF row. Then rebuild and deploy the `.tgz`.
 
 The script also sets which rows start **collapsed**. Only the rows listed in `OPEN_ROWS` (*Device
-health*, *Traffic counters*, *NAF loop · Orchestrator decisions*) open by default; the others
+health*, *Traffic counters*, *Orchestrator*) open by default; the others
 (*Interfaces*, *Drift: admin up / oper down*, every *NAF · <use case>* row) are collapsed, and their
 panels are nested inside the row object, as Grafana stores collapsed rows. Edit those rows' panels
 from the script or in the JSON, never by saving from the UI.
 
 | Row | KPIs | Data |
 |---|---|---|
-| NAF loop · Orchestrator decisions | autonomy level, decisions by kind, alert level per use case, decision log, remediation annotations | `naf_event` (orchestrator, `ORCH_INFLUX_EVENTS=true`), annotations tag `naf` |
+| Orchestrator | UP/DOWN, autonomy level, decisions by kind, alert level per use case, decision log, remediation annotations | `naf_orchestrator` heartbeat and `naf_event` (orchestrator, `ORCH_INFLUX_EVENTS=true`), annotations tag `naf` |
 | NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
 | NAF · logging-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
 | NAF · prefix-limit | RX prefixes vs. MAX RX prefixes (40/50 thresholds, dashed MAX RX prefixes line from intent via the hidden variable `max_rx_prefixes`), pre-policy vs accepted, import clamp present, prefix intent (minimum / maximum RX prefixes), session resets sent (NOTIFICATIONs per minute) next to the BGP session state | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |

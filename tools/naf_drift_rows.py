@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate the NAF workshop rows at the bottom of naf/dashboard-naf.json.
 
-Idempotent: removes everything from the first NAF row ("Drift (NAF loop)" or "NAF ·") to the end
+Idempotent: removes everything from the first NAF row ("Orchestrator", "NAF ·", or older titles) to the end
 of the dashboard, then appends the rows below. Panels above (device health, interfaces, traffic,
 admin-up/oper-down drift) are never touched.
 
@@ -10,7 +10,7 @@ admin-up/oper-down drift) are never touched.
 
 Data sources (all InfluxDB jtsdb, datasource uid jtsuid):
   openJTS / naf profile : NETWORK_INSTANCE_BGP, COMMIT, NAF_CONFIG, NAF_TRACE, NAF_LOGFILES
-  NAF workshop code     : naf_intent (seed_intent), naf_event (orchestrator), naf_commit /
+  NAF workshop code     : naf_intent (seed_intent), naf_event + naf_orchestrator (orchestrator), naf_commit /
                           naf_secpolicy (netconf_poller), naf_syslog (syslog Collector swap)
 """
 from __future__ import annotations
@@ -21,7 +21,9 @@ from pathlib import Path
 DASH = Path(__file__).resolve().parent.parent / "naf" / "dashboard-naf.json"
 DS = {"type": "influxdb", "uid": "jtsuid"}
 DEV = '"SHORTNAME" =~ /^$device$/'
+ORCH_ROW = "Orchestrator"  # first generated row: main() finds it by this exact title
 NOW = "time > now() - 90s"  # "current" config view: absent leaves must not show stale values
+HEARTBEAT_WINDOW = "45s"  # ORCH_HEARTBEAT_S=15: tolerates jtsdb's ~10 s write delay plus one late heartbeat
 
 
 class Layout:
@@ -123,7 +125,18 @@ def build(y: int, first_id: int) -> list[dict]:
     L = Layout(y, first_id)
 
     # ---------------- orchestrator ----------------
-    L.row("NAF loop · Orchestrator decisions (all use cases)")
+    L.row(ORCH_ROW)
+    L.add({"type": "stat", "title": "Orchestrator",
+           "description": "UP while the orchestrator writes its heartbeat (naf_orchestrator, every ORCH_HEARTBEAT_S = 15 s, "
+                          "needs ORCH_INFLUX_EVENTS=true). DOWN when none arrived in the last 45 s: stopped, hung, or "
+                          "cannot write to InfluxDB. Check it on the VM with scripts/orchestrator.status.sh.",
+           "targets": [q("A", f'SELECT last("up") FROM "naf_orchestrator" WHERE time > now() - {HEARTBEAT_WINDOW}', "time_series")],
+           "fieldConfig": {"defaults": {"noValue": "DOWN", "unit": "none",
+                                        "mappings": [{"type": "value", "options": {"1": {"text": "UP", "color": "green", "index": 0}}}],
+                                        "color": {"mode": "thresholds"},
+                                        "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": None}]}}, "overrides": []},
+           "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value",
+                       "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}}, 4, 7)
     L.add({"type": "stat", "title": "Autonomy level",
            "description": "Autonomy of the orchestrator at its latest decision (naf_event.autonomy_level). Change it with PUT /autonomy?level=L1|L2|L3.",
            "targets": [q("A", 'SELECT last("autonomy_level") FROM "naf_event" WHERE time > now() - 30d', "time_series")],
@@ -135,19 +148,19 @@ def build(y: int, first_id: int) -> list[dict]:
                                         "color": {"mode": "thresholds"},
                                         "thresholds": {"mode": "absolute", "steps": [{"color": "text", "value": None}]}}, "overrides": []},
            "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value",
-                       "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}}, 5, 7)
+                       "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}}, 4, 7)
     L.add({"type": "bargauge", "title": "Decisions by kind",
            "description": "Orchestrator event-log kinds in the selected time range (notified, pending, remediated, no-drift, within-policy, recovered, ...).",
            "targets": [q("A", 'SELECT count("count") FROM "naf_event" WHERE $timeFilter GROUP BY "kind"', "time_series", "$tag_kind")],
            "fieldConfig": {"defaults": {"unit": "none", "decimals": 0, "min": 0, "color": {"mode": "palette-classic"},
                                         "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}]}}, "overrides": []},
            "options": {"orientation": "horizontal", "displayMode": "basic", "showUnfilled": True, "valueMode": "color",
-                       "reduceOptions": {"calcs": ["sum"], "fields": "", "values": False}}}, 7, 7)
+                       "reduceOptions": {"calcs": ["sum"], "fields": "", "values": False}}}, 6, 7)
     L.add({"type": "annolist", "title": "Remediations (annotations)",
            "description": "Grafana annotations posted by the orchestrator on every 'remediated' event (GRAFANA_ANNOTATIONS=true), tag naf.",
            "options": {"onlyFromThisDashboard": False, "onlyInTimeRange": False, "tags": ["naf"], "limit": 10,
                        "showUser": False, "showTime": True, "showTags": True, "navigateToPanel": False,
-                       "navigateBefore": "10m", "navigateAfter": "10m"}}, 12, 7)
+                       "navigateBefore": "10m", "navigateAfter": "10m"}}, 10, 7)
     L.add({"type": "state-timeline", "title": "Alert level per alert type and device",
            "description": "Level of the latest Kapacitor alert handled by the orchestrator (naf_event.level), per alert type "
                           "(first part of the alert id) / device. config-change means 'a commit happened'; the logging-drift "
@@ -345,7 +358,7 @@ def build(y: int, first_id: int) -> list[dict]:
 # Rows open when the dashboard loads; every other row starts collapsed (attendees expand the row of
 # the use case they work on). Expanding in the browser is not saved, so the profile file stays the
 # single source of truth.
-OPEN_ROWS = ("Device health", "Traffic counters", "NAF loop · Orchestrator decisions")
+OPEN_ROWS = ("Device health", "Traffic counters", ORCH_ROW)
 
 
 def _is_open(title: str) -> bool:
@@ -400,7 +413,7 @@ def main() -> None:
     d = json.loads(DASH.read_text())
     panels = flatten(d["panels"])
     start = next((i for i, p in enumerate(panels) if p.get("type") == "row" and
-                  (p.get("title", "").startswith("Drift (NAF loop)") or p.get("title", "").startswith("NAF "))), len(panels))
+                  (p.get("title", "") == ORCH_ROW or p.get("title", "").startswith(("Drift (NAF loop)", "NAF ")))), len(panels))
     kept = panels[:start]
     y = max((p["gridPos"]["y"] + p["gridPos"]["h"] for p in kept), default=0)
     first_id = max((p["id"] for p in kept), default=0) + 1
