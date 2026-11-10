@@ -1954,7 +1954,7 @@
     },
     {
       "type": "row",
-      "title": "NAF loop \u00b7 Orchestrator decisions (all use cases)",
+      "title": "Orchestrator",
       "id": 32,
       "collapsed": false,
       "panels": [],
@@ -1964,6 +1964,79 @@
         "x": 0,
         "y": 53
       }
+    },
+    {
+      "type": "stat",
+      "title": "Orchestrator",
+      "description": "UP while the orchestrator writes its heartbeat (naf_orchestrator, every ORCH_HEARTBEAT_S = 15 s, needs ORCH_INFLUX_EVENTS=true). DOWN when none arrived in the last 45 s: stopped, hung, or cannot write to InfluxDB. Check it on the VM with scripts/orchestrator.status.sh.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "query": "SELECT last(\"up\") FROM \"naf_orchestrator\" WHERE time > now() - 45s",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "DOWN",
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 0
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 33,
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 54
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "jtsuid"
+      },
+      "pluginVersion": "10.3.1"
     },
     {
       "type": "stat",
@@ -2035,11 +2108,11 @@
           "values": false
         }
       },
-      "id": 33,
+      "id": 34,
       "gridPos": {
         "h": 7,
-        "w": 5,
-        "x": 0,
+        "w": 4,
+        "x": 4,
         "y": 54
       },
       "datasource": {
@@ -2098,11 +2171,11 @@
           "values": false
         }
       },
-      "id": 34,
+      "id": 35,
       "gridPos": {
         "h": 7,
-        "w": 7,
-        "x": 5,
+        "w": 6,
+        "x": 8,
         "y": 54
       },
       "datasource": {
@@ -2129,11 +2202,11 @@
         "navigateBefore": "10m",
         "navigateAfter": "10m"
       },
-      "id": 35,
+      "id": 36,
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 12,
+        "w": 10,
+        "x": 14,
         "y": 54
       },
       "datasource": {
@@ -2218,7 +2291,7 @@
           "sort": "none"
         }
       },
-      "id": 36,
+      "id": 37,
       "gridPos": {
         "h": 6,
         "w": 24,
@@ -2412,7 +2485,7 @@
           "fields": ""
         }
       },
-      "id": 37,
+      "id": 38,
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -2428,7 +2501,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 bgp-peer-drift",
-      "id": 38,
+      "id": 39,
       "collapsed": true,
       "panels": [
         {
@@ -2635,7 +2708,7 @@
               "fields": ""
             }
           },
-          "id": 39,
+          "id": 40,
           "gridPos": {
             "h": 6,
             "w": 14,
@@ -2737,7 +2810,7 @@
               "fields": ""
             }
           },
-          "id": 40,
+          "id": 41,
           "gridPos": {
             "h": 6,
             "w": 10,
@@ -2814,7 +2887,7 @@
               "sort": "none"
             }
           },
-          "id": 41,
+          "id": 42,
           "gridPos": {
             "h": 5,
             "w": 24,
@@ -2838,7 +2911,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 logging-drift",
-      "id": 42,
+      "id": 43,
       "collapsed": true,
       "panels": [
         {
@@ -2940,7 +3013,7 @@
               "fields": ""
             }
           },
-          "id": 43,
+          "id": 44,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -3074,7 +3147,7 @@
               "fields": ""
             }
           },
-          "id": 44,
+          "id": 45,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -3145,7 +3218,7 @@
               "values": false
             }
           },
-          "id": 45,
+          "id": 46,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -3219,7 +3292,7 @@
               "sort": "desc"
             }
           },
-          "id": 46,
+          "id": 47,
           "gridPos": {
             "h": 7,
             "w": 16,
@@ -3313,7 +3386,7 @@
               "fields": ""
             }
           },
-          "id": 47,
+          "id": 48,
           "gridPos": {
             "h": 7,
             "w": 8,
@@ -3337,7 +3410,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 prefix-limit",
-      "id": 48,
+      "id": 49,
       "collapsed": true,
       "panels": [
         {
@@ -3452,7 +3525,7 @@
               "sort": "desc"
             }
           },
-          "id": 49,
+          "id": 50,
           "gridPos": {
             "h": 8,
             "w": 12,
@@ -3538,7 +3611,7 @@
               "sort": "desc"
             }
           },
-          "id": 50,
+          "id": 51,
           "gridPos": {
             "h": 8,
             "w": 12,
@@ -3670,7 +3743,7 @@
               "fields": ""
             }
           },
-          "id": 51,
+          "id": 52,
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -3762,7 +3835,7 @@
               "fields": ""
             }
           },
-          "id": 52,
+          "id": 53,
           "gridPos": {
             "h": 6,
             "w": 12,
@@ -3841,7 +3914,7 @@
               "sort": "desc"
             }
           },
-          "id": 53,
+          "id": 54,
           "gridPos": {
             "h": 7,
             "w": 12,
@@ -3918,7 +3991,7 @@
               "sort": "none"
             }
           },
-          "id": 54,
+          "id": 55,
           "gridPos": {
             "h": 7,
             "w": 12,
@@ -3942,7 +4015,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 security-policy-drift (deferred)",
-      "id": 55,
+      "id": 56,
       "collapsed": true,
       "panels": [
         {
@@ -4041,7 +4114,7 @@
               "fields": ""
             }
           },
-          "id": 56,
+          "id": 57,
           "gridPos": {
             "h": 5,
             "w": 24,
@@ -4065,7 +4138,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 swap-a-block",
-      "id": 57,
+      "id": 58,
       "collapsed": true,
       "panels": [
         {
@@ -4137,7 +4210,7 @@
               "fields": ""
             }
           },
-          "id": 58,
+          "id": 59,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4232,7 +4305,7 @@
               "fields": ""
             }
           },
-          "id": 59,
+          "id": 60,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4315,7 +4388,7 @@
               "fields": ""
             }
           },
-          "id": 60,
+          "id": 61,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4400,7 +4473,7 @@
               "fields": ""
             }
           },
-          "id": 61,
+          "id": 62,
           "gridPos": {
             "h": 6,
             "w": 24,
@@ -4518,7 +4591,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 35,
+  "version": 38,
   "weekStart": "",
   "id": null
 }
