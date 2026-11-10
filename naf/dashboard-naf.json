@@ -3745,7 +3745,7 @@
           },
           "id": 52,
           "gridPos": {
-            "h": 6,
+            "h": 5,
             "w": 12,
             "x": 0,
             "y": 86
@@ -3837,7 +3837,7 @@
           },
           "id": 53,
           "gridPos": {
-            "h": 6,
+            "h": 5,
             "w": 12,
             "x": 12,
             "y": 86
@@ -3919,7 +3919,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 92
+            "y": 91
           },
           "datasource": {
             "type": "influxdb",
@@ -3996,7 +3996,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 92
+            "y": 91
           },
           "datasource": {
             "type": "influxdb",
@@ -4591,7 +4591,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 38,
+  "version": 41,
   "weekStart": "",
   "id": null
 }

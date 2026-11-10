@@ -291,7 +291,7 @@ def build(y: int, first_id: int) -> list[dict]:
                     {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
                     {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^IMPORT-CLAMP.*", "result": {"color": "orange", "index": 0}}},
                                                  {"type": "regex", "options": {"pattern": "^INPUT-POLICY.*", "result": {"color": "green", "index": 1}}}]},
-                    {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}]), 12, 6)
+                    {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}]), 12, 5)
     L.add(table("Prefix intent",
                 "naf_intent usecase=prefix-limit (minimum and maximum RX prefixes per device and neighbour) and the intended import policy "
                 "(usecase=bgp-peer-drift; 'none' in intent v1, INPUT-POLICY-ONLY-<peer> after scripts/update_intent.py).",
@@ -300,7 +300,7 @@ def build(y: int, first_id: int) -> list[dict]:
                 [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
                  {"id": "organize", "options": {"indexByName": {"device": 0, "neighbor_address": 1, "Minimum RX prefixes": 2,
                                                                 "Maximum RX prefixes": 3, "Intended import policy": 4},
-                                                "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 6)
+                                                "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 5)
     resets = timeseries("Session resets sent (prefix-limit teardown)",
                         "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). "
                         "Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. "
