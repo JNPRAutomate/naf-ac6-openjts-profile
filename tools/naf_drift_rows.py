@@ -138,9 +138,11 @@ def build(y: int, first_id: int) -> list[dict]:
            "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value",
                        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}}, 4, 7)
     L.add({"type": "stat", "title": "Autonomy level",
-           "description": "Autonomy of the orchestrator at its latest decision (naf_event.autonomy_level). Change it with PUT /autonomy?level=L1|L2|L3.",
-           "targets": [q("A", 'SELECT last("autonomy_level") FROM "naf_event" WHERE time > now() - 30d', "time_series")],
-           "fieldConfig": {"defaults": {"noValue": "orchestrator not seen", "unit": "none",
+           "description": "Current autonomy of the running orchestrator, from its heartbeat (naf_orchestrator.autonomy_level, every 15 s), "
+                          "so a restart at another level shows within one heartbeat. 'orchestrator down' when no heartbeat arrived in the last 45 s. "
+                          "Change it with PUT /autonomy?level=L1|L2|L3 (set-autonomy-level-*).",
+           "targets": [q("A", f'SELECT last("autonomy_level") FROM "naf_orchestrator" WHERE time > now() - {HEARTBEAT_WINDOW}', "time_series")],
+           "fieldConfig": {"defaults": {"noValue": "orchestrator down", "unit": "none",
                                         "mappings": [{"type": "value", "options": {
                                             "1": {"text": "L1 Observe", "color": "blue", "index": 0},
                                             "2": {"text": "L2 Assist", "color": "orange", "index": 1},
@@ -291,7 +293,7 @@ def build(y: int, first_id: int) -> list[dict]:
                     {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
                     {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^IMPORT-CLAMP.*", "result": {"color": "orange", "index": 0}}},
                                                  {"type": "regex", "options": {"pattern": "^INPUT-POLICY.*", "result": {"color": "green", "index": 1}}}]},
-                    {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}]), 12, 6)
+                    {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}]), 12, 5)
     L.add(table("Prefix intent",
                 "naf_intent usecase=prefix-limit (minimum and maximum RX prefixes per device and neighbour) and the intended import policy "
                 "(usecase=bgp-peer-drift; 'none' in intent v1, INPUT-POLICY-ONLY-<peer> after scripts/update_intent.py).",
@@ -300,7 +302,7 @@ def build(y: int, first_id: int) -> list[dict]:
                 [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
                  {"id": "organize", "options": {"indexByName": {"device": 0, "neighbor_address": 1, "Minimum RX prefixes": 2,
                                                                 "Maximum RX prefixes": 3, "Intended import policy": 4},
-                                                "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 6)
+                                                "renameByName": {"device": "Device", "neighbor_address": "Neighbor"}}}]), 12, 5)
     resets = timeseries("Session resets sent (prefix-limit teardown)",
                         "BGP NOTIFICATIONs this router sent per minute (session_notif_sent = neighbor/state/messages/sent/NOTIFICATION). "
                         "Only the router that tears the session down sends them: pe1 when its accepted-prefix-limit is exceeded. "
@@ -315,16 +317,16 @@ def build(y: int, first_id: int) -> list[dict]:
                             "and the other states (red); with the clamp or the fix it stays green."), 12, 7)
 
     # ---------------- security-policy-drift ----------------
-    L.row("NAF · security-policy-drift (deferred)")
+    L.row("NAF · security-policy-drift")
     L.add(table("csrx rule order: actual vs intent",
-                "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
-                [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE $timeFilter GROUP BY "device", "from_zone", "to_zone"'),
+                "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. One row per zone pair; Actual order ≠ Intended order raises security-policy-drift:csrx. Actual is empty when the poller is not running.",
+                [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE ' + NOW + ' GROUP BY "device", "from_zone", "to_zone"'),
                  q("B", 'SELECT last("rule_order") AS "Intended order", last("rule_count") AS "Intended rules" FROM "naf_intent" WHERE "usecase" = \'security-policy-drift\' GROUP BY "device", "from_zone", "to_zone"')],
                 [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
                  {"id": "organize", "options": {"indexByName": {"device": 0, "from_zone": 1, "to_zone": 2, "Actual order": 3, "Intended order": 4,
                                                                 "Actual rules": 5, "Intended rules": 6},
                                                 "renameByName": {"device": "Device", "from_zone": "From zone", "to_zone": "To zone"}}}],
-                no_value="deferred: csrx has no zones/policies yet"), 24, 5)
+                no_value="no data: is the poller running? (--only secpolicy)"), 24, 5)
 
     # ---------------- swap-a-block ----------------
     L.row("NAF · swap-a-block")
