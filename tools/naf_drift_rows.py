@@ -138,9 +138,11 @@ def build(y: int, first_id: int) -> list[dict]:
            "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value",
                        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}}, 4, 7)
     L.add({"type": "stat", "title": "Autonomy level",
-           "description": "Autonomy of the orchestrator at its latest decision (naf_event.autonomy_level). Change it with PUT /autonomy?level=L1|L2|L3.",
-           "targets": [q("A", 'SELECT last("autonomy_level") FROM "naf_event" WHERE time > now() - 30d', "time_series")],
-           "fieldConfig": {"defaults": {"noValue": "orchestrator not seen", "unit": "none",
+           "description": "Current autonomy of the running orchestrator, from its heartbeat (naf_orchestrator.autonomy_level, every 15 s), "
+                          "so a restart at another level shows within one heartbeat. 'orchestrator down' when no heartbeat arrived in the last 45 s. "
+                          "Change it with PUT /autonomy?level=L1|L2|L3 (set-autonomy-level-*).",
+           "targets": [q("A", f'SELECT last("autonomy_level") FROM "naf_orchestrator" WHERE time > now() - {HEARTBEAT_WINDOW}', "time_series")],
+           "fieldConfig": {"defaults": {"noValue": "orchestrator down", "unit": "none",
                                         "mappings": [{"type": "value", "options": {
                                             "1": {"text": "L1 Observe", "color": "blue", "index": 0},
                                             "2": {"text": "L2 Assist", "color": "orange", "index": 1},
