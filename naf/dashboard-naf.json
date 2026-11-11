@@ -4021,14 +4021,14 @@
         {
           "type": "table",
           "title": "csrx rule order: actual vs intent",
-          "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. One row per zone pair; Actual order \u2260 Intended order raises security-policy-drift:csrx. Actual is empty when the poller is not running.",
+          "description": "One row per rule, top to bottom in the order the csrx evaluates them within each zone pair (#). Actual = naf_secpolicy_rule (collector/netconf_poller.py --only secpolicy, newest poll); Intended = naf_intent_rule (seed-intent). After break.sh, row 1 shows TEMP-VENDOR-ACCESS (orange) where intent has ALLOW-SSH, every rule below moves down one row, and the last row has no intended rule. Any difference raises security-policy-drift:csrx.",
           "targets": [
             {
               "datasource": {
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE time > now() - 90s GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+              "query": "SELECT last(\"rule\") AS \"Actual\", \"sort_key\" FROM \"naf_secpolicy_rule\" WHERE time > now() - 60s GROUP BY \"device\", \"from_zone\", \"to_zone\", \"position\"",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "table"
@@ -4038,7 +4038,7 @@
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"rule_order\") AS \"Intended order\", last(\"rule_count\") AS \"Intended rules\" FROM \"naf_intent\" WHERE \"usecase\" = 'security-policy-drift' GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+              "query": "SELECT last(\"rule\") AS \"Intended\", \"sort_key\" FROM \"naf_intent_rule\" GROUP BY \"device\", \"from_zone\", \"to_zone\", \"position\"",
               "rawQuery": true,
               "refId": "B",
               "resultFormat": "table"
@@ -4058,21 +4058,33 @@
               "options": {}
             },
             {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "sort_key"
+                  }
+                ]
+              }
+            },
+            {
               "id": "organize",
               "options": {
+                "excludeByName": {
+                  "device": true,
+                  "sort_key": true
+                },
                 "indexByName": {
-                  "device": 0,
-                  "from_zone": 1,
-                  "to_zone": 2,
-                  "Actual order": 3,
-                  "Intended order": 4,
-                  "Actual rules": 5,
-                  "Intended rules": 6
+                  "from_zone": 0,
+                  "to_zone": 1,
+                  "position": 2,
+                  "Actual": 3,
+                  "Intended": 4
                 },
                 "renameByName": {
-                  "device": "Device",
                   "from_zone": "From zone",
-                  "to_zone": "To zone"
+                  "to_zone": "To zone",
+                  "position": "#"
                 }
               }
             }
@@ -4086,7 +4098,7 @@
                   "type": "auto"
                 }
               },
-              "noValue": "no data: is the poller running? (--only secpolicy)"
+              "noValue": "no data: is the poller running? (scripts/poller.sh start)"
             },
             "overrides": [
               {
@@ -4098,6 +4110,155 @@
                   {
                     "id": "noValue",
                     "value": "\u2014"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Actual"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": "^TEMP-.*",
+                          "result": {
+                            "color": "orange",
+                            "index": 0
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "#"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 60
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "From zone"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "SERVERS": {
+                            "color": "green",
+                            "index": 0
+                          },
+                          "VENDOR": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "UNTRUST": {
+                            "color": "red",
+                            "index": 2
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "To zone"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "SERVERS": {
+                            "color": "green",
+                            "index": 0
+                          },
+                          "VENDOR": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "UNTRUST": {
+                            "color": "red",
+                            "index": 2
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
                   }
                 ]
               }
@@ -4116,10 +4277,387 @@
           },
           "id": 57,
           "gridPos": {
-            "h": 5,
+            "h": 7,
             "w": 24,
             "x": 0,
             "y": 79
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "table",
+          "title": "csrx policy hit counts (show security policies hit-count)",
+          "description": "NAF_SECPOL_HITS (naf profile, NETCONF every 30 s, newest poll): one row per rule, top to bottom in the order the csrx evaluates them (sorted by the policy index, hidden). Hits count the sessions each rule matched since it was created or last cleared (clear security policies hit-count, as L1 does). After break.sh, TEMP-VENDOR-ACCESS (orange) sits on top and takes every flow to the vendor: its hits grow while ALLOW-SSH and ALLOW-ICMP stop.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"hit_count\") AS \"Hits\", \"policy_index\", \"policy_action\" AS \"Action\" FROM \"NAF_SECPOL_HITS\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"from_zone\" != 'all-zone' AND time > now() - 50s GROUP BY \"SHORTNAME\", \"from_zone\", \"to_zone\", \"policy_name\"",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "targetField": "policy_index",
+                    "destinationType": "number"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "policy_index"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "SHORTNAME": true,
+                  "policy_index": true
+                },
+                "indexByName": {
+                  "from_zone": 0,
+                  "to_zone": 1,
+                  "policy_name": 2,
+                  "Hits": 3,
+                  "Action": 4
+                },
+                "renameByName": {
+                  "from_zone": "From zone",
+                  "to_zone": "To zone",
+                  "policy_name": "Policy"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                }
+              },
+              "noValue": "no hit counts: is the naf profile assigned to the csrx?"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*"
+                },
+                "properties": [
+                  {
+                    "id": "noValue",
+                    "value": "\u2014"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "From zone"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "SERVERS": {
+                            "color": "green",
+                            "index": 0
+                          },
+                          "VENDOR": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "UNTRUST": {
+                            "color": "red",
+                            "index": 2
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "To zone"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "SERVERS": {
+                            "color": "green",
+                            "index": 0
+                          },
+                          "VENDOR": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "UNTRUST": {
+                            "color": "red",
+                            "index": 2
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Action"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "Permit": {
+                            "color": "green",
+                            "index": 0
+                          },
+                          "Deny": {
+                            "color": "red",
+                            "index": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Policy"
+                },
+                "properties": [
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "regex",
+                        "options": {
+                          "pattern": "^TEMP-.*",
+                          "result": {
+                            "color": "orange",
+                            "index": 0
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "id": 58,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 86
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "jtsuid"
+          },
+          "pluginVersion": "10.3.1"
+        },
+        {
+          "type": "timeseries",
+          "title": "Hits per rule over time",
+          "description": "NAF_SECPOL_HITS.hit_count, one line per zone pair and rule (the index is left out, so a rule keeps its line when break.sh shifts it down). flows.sh adds 1 hit per flow to the rule that matched: after the break the TEMP-VENDOR-ACCESS line (orange) appears and climbs while ALLOW-SSH and ALLOW-ICMP stay flat. A line ends when its rule is deleted; a rule created again (reset-lab, remediation) starts again from 0.",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "jtsuid"
+              },
+              "query": "SELECT last(\"hit_count\") FROM \"NAF_SECPOL_HITS\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"from_zone\" != 'all-zone' AND $timeFilter GROUP BY time(30s), \"from_zone\", \"to_zone\", \"policy_name\" fill(none)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "alias": "$tag_from_zone \u2192 $tag_to_zone $tag_policy_name"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "always",
+                "spanNulls": 60000,
+                "thresholdsStyle": {
+                  "mode": "off"
+                },
+                "lineInterpolation": "stepAfter",
+                "pointSize": 4
+              },
+              "decimals": 0
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*TEMP-.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 59,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 86
           },
           "datasource": {
             "type": "influxdb",
@@ -4138,7 +4676,7 @@
     {
       "type": "row",
       "title": "NAF \u00b7 swap-a-block",
-      "id": 58,
+      "id": 60,
       "collapsed": true,
       "panels": [
         {
@@ -4210,7 +4748,7 @@
               "fields": ""
             }
           },
-          "id": 59,
+          "id": 61,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4305,7 +4843,7 @@
               "fields": ""
             }
           },
-          "id": 60,
+          "id": 62,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4388,7 +4926,7 @@
               "fields": ""
             }
           },
-          "id": 61,
+          "id": 63,
           "gridPos": {
             "h": 6,
             "w": 8,
@@ -4473,7 +5011,7 @@
               "fields": ""
             }
           },
-          "id": 62,
+          "id": 64,
           "gridPos": {
             "h": 6,
             "w": 24,
@@ -4591,7 +5129,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 43,
+  "version": 50,
   "weekStart": "",
   "id": null
 }

@@ -209,6 +209,8 @@ This file follows the same structure, with a gNMI input and more processors.
 
 Other processors are available if you need to change data further: `clone_list`, `pivot_list`, `xreducer_list`, `converter_list`, `enum_list`, `strings_list`. Look at the native profiles in `JTS/design_profile/` for examples.
 
+> **JTSO fixes the processor order.** It ignores the `order` you set and always runs, among others, rename (54), filtering (150), converter (190), enrichment (200+), rate (210+). So a `filtering_list` entry can't filter on a tag that `converter_list` creates: at 150 it is still a field, and every point passes. Filter in the Grafana query instead (as the `NAF_SECPOL_HITS` panels do with `"from_zone" != 'all-zone'`). Check the real order in the generated `JTS/compose/telegraf/<family>/telegraf.d/*.conf`.
+
 > **Watch the number of InfluxDB series.** Every distinct tag value creates a new series. Never keep a tag that changes over time, such as a process PID: the cRPD keeps spawning short-lived processes (`mgd` for every NETCONF session, `ifinfo`, `ps`, …), and each one would add new series. The NAF profile overwrites `process_pid` with a constant through `regex_list` (`"type": 2`), which keeps one series per process name. To check, run `SHOW SERIES EXACT CARDINALITY FROM "<measurement>"`. The count should stay flat over time.
 
 ---
@@ -247,7 +249,7 @@ from the script or in the JSON, never by saving from the UI.
 | NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
 | NAF · logging-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
 | NAF · prefix-limit | RX prefixes vs. MAX RX prefixes (40/50 thresholds, dashed MAX RX prefixes line from intent via the hidden variable `max_rx_prefixes`), pre-policy vs accepted, import clamp present, prefix intent (minimum / maximum RX prefixes), session resets sent (NOTIFICATIONs per minute) next to the BGP session state | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
-| NAF · security-policy-drift | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
+| NAF · security-policy-drift | rule order actual vs intent (one row per rule, from the workshop's `naf_secpolicy_rule` / `naf_intent_rule`; zones coloured SERVERS green, VENDOR orange, UNTRUST red), policy hit counts (table in the csrx's order, and hits per rule over time) | `naf_secpolicy`, `naf_intent`, **`NAF_SECPOL_HITS`** |
 | NAF · swap-a-block | newest commit per Collector (profile / Python poller / syslog push), which Intent backend + Executor acted | `COMMIT`, `naf_commit`, `naf_syslog`, `naf_event` |
 
 Collection items added to the profile for these rows (NETCONF, every 30 s):
@@ -257,6 +259,7 @@ Collection items added to the profile for these rows (NETCONF, every 30 s):
 | `NAF_CONFIG` | crpd | `<get-configuration>` filtered to `protocols bgp` | `bgp_group` → `cfg_peer_as` (int), `cfg_import` (string, absent when no import policy) |
 | `NAF_TRACE` | crpd | `<get-configuration>` filtered to `protocols bgp traceoptions` | → `bgp_trace_file` (string). **No point at all** when traceoptions are absent |
 | `NAF_LOGFILES` | crpd, csrx | `<file-list><detail/><path>/var/log/</path></file-list>` | `log_file` (filtered to `messages`, `bgp.log`, `interactive-commands`) → `log_file_size`, `log_file_size_rate` (rate processor) |
+| `NAF_SECPOL_HITS` | csrx | `<get-security-policies-hit-count>` (= `show security policies hit-count`) | key `policy_index`; `policy_name`, `from_zone`, `to_zone` become **tags** through `converter_list` (a rule keeps its series when a rule inserted above shifts its index, and the two `DENY-ALL` rules stay apart) → `hit_count` (int), `policy_action` (string). The two `all-zone` default policies are stored too: the panels filter them out |
 
 gNMI items added to `crpd_naf.json` for these rows (measurement `NETWORK_INSTANCE_BGP`, `sample`, every 60 s):
 

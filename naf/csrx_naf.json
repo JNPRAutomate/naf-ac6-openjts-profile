@@ -138,6 +138,33 @@
             }
           ],
           "interval": 30
+        },
+        {
+          "name": "NAF_SECPOL_HITS",
+          "rpc": "<get-security-policies-hit-count></get-security-policies-hit-count>",
+          "fields": [
+            {
+              "field_path": "/policy-hit-count/policy-hit-count-entry[policy-hit-count-index]/policy-hit-count-policy-name",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/policy-hit-count/policy-hit-count-entry[policy-hit-count-index]/policy-hit-count-from-zone",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/policy-hit-count/policy-hit-count-entry[policy-hit-count-index]/policy-hit-count-to-zone",
+              "field_type": "string"
+            },
+            {
+              "field_path": "/policy-hit-count/policy-hit-count-entry[policy-hit-count-index]/policy-hit-count-count",
+              "field_type": "int"
+            },
+            {
+              "field_path": "/policy-hit-count/policy-hit-count-entry[policy-hit-count-index]/policy-hit-count-action",
+              "field_type": "string"
+            }
+          ],
+          "interval": 30
         }
       ]
     }
@@ -311,6 +338,44 @@
           "to": "log_file_size"
         }
       ]
+    },
+    {
+      "order": 140,
+      "namepass": [
+        "NAF_SECPOL_HITS"
+      ],
+      "entries": [
+        {
+          "type": 0,
+          "from": "policy-hit-count-index",
+          "to": "policy_index"
+        },
+        {
+          "type": 1,
+          "from": "policy-hit-count-policy-name",
+          "to": "policy_name"
+        },
+        {
+          "type": 1,
+          "from": "policy-hit-count-from-zone",
+          "to": "from_zone"
+        },
+        {
+          "type": 1,
+          "from": "policy-hit-count-to-zone",
+          "to": "to_zone"
+        },
+        {
+          "type": 1,
+          "from": "policy-hit-count-count",
+          "to": "hit_count"
+        },
+        {
+          "type": 1,
+          "from": "policy-hit-count-action",
+          "to": "policy_action"
+        }
+      ]
     }
   ],
   "enrichment_list": [
@@ -338,7 +403,8 @@
     {
       "order": 230,
       "namepass": [
-        "NAF_LOGFILES"
+        "NAF_LOGFILES",
+        "NAF_SECPOL_HITS"
       ],
       "family": "csrx",
       "two_levels": false,
@@ -371,7 +437,9 @@
         "commit_user",
         "commit_client",
         "log_file_size",
-        "log_file_size_rate"
+        "log_file_size_rate",
+        "hit_count",
+        "policy_action"
       ]
     }
   ],
@@ -439,6 +507,19 @@
       ],
       "fields": [
         "log_file_size"
+      ]
+    }
+  ],
+  "converter_list": [
+    {
+      "order": 190,
+      "namepass": [
+        "NAF_SECPOL_HITS"
+      ],
+      "tag_type": [
+        "policy_name",
+        "from_zone",
+        "to_zone"
       ]
     }
   ]
