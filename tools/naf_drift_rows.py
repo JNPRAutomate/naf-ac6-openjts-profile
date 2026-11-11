@@ -317,16 +317,16 @@ def build(y: int, first_id: int) -> list[dict]:
                             "and the other states (red); with the clamp or the fix it stays green."), 12, 7)
 
     # ---------------- security-policy-drift ----------------
-    L.row("NAF · security-policy-drift (deferred)")
+    L.row("NAF · security-policy-drift")
     L.add(table("csrx rule order: actual vs intent",
-                "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
-                [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE $timeFilter GROUP BY "device", "from_zone", "to_zone"'),
+                "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. One row per zone pair; Actual order ≠ Intended order raises security-policy-drift:csrx. Actual is empty when the poller is not running.",
+                [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE ' + NOW + ' GROUP BY "device", "from_zone", "to_zone"'),
                  q("B", 'SELECT last("rule_order") AS "Intended order", last("rule_count") AS "Intended rules" FROM "naf_intent" WHERE "usecase" = \'security-policy-drift\' GROUP BY "device", "from_zone", "to_zone"')],
                 [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
                  {"id": "organize", "options": {"indexByName": {"device": 0, "from_zone": 1, "to_zone": 2, "Actual order": 3, "Intended order": 4,
                                                                 "Actual rules": 5, "Intended rules": 6},
                                                 "renameByName": {"device": "Device", "from_zone": "From zone", "to_zone": "To zone"}}}],
-                no_value="deferred: csrx has no zones/policies yet"), 24, 5)
+                no_value="no data: is the poller running? (--only secpolicy)"), 24, 5)
 
     # ---------------- swap-a-block ----------------
     L.row("NAF · swap-a-block")

@@ -247,7 +247,7 @@ from the script or in the JSON, never by saving from the UI.
 | NAF · bgp-peer-drift | peer-as actual vs intent (+ DRIFT flag), configured peer-as / import per group, session state | `NETWORK_INSTANCE_BGP`, `naf_intent`, **`NAF_CONFIG`** |
 | NAF · logging-drift | BGP traceoptions present, logging intent + maintenance windows, log file size, log growth (B/s), latest commit | **`NAF_TRACE`**, **`NAF_LOGFILES`**, `naf_intent`, `COMMIT` |
 | NAF · prefix-limit | RX prefixes vs. MAX RX prefixes (40/50 thresholds, dashed MAX RX prefixes line from intent via the hidden variable `max_rx_prefixes`), pre-policy vs accepted, import clamp present, prefix intent (minimum / maximum RX prefixes), session resets sent (NOTIFICATIONs per minute) next to the BGP session state | `NETWORK_INSTANCE_BGP`, **`NAF_CONFIG`**, `naf_intent` |
-| NAF · security-policy-drift (deferred) | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
+| NAF · security-policy-drift | rule order actual vs intent | `naf_secpolicy`, `naf_intent` |
 | NAF · swap-a-block | newest commit per Collector (profile / Python poller / syslog push), which Intent backend + Executor acted | `COMMIT`, `naf_commit`, `naf_syslog`, `naf_event` |
 
 Collection items added to the profile for these rows (NETCONF, every 30 s):

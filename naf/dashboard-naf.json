@@ -4014,21 +4014,21 @@
     },
     {
       "type": "row",
-      "title": "NAF \u00b7 security-policy-drift (deferred)",
+      "title": "NAF \u00b7 security-policy-drift",
       "id": 56,
       "collapsed": true,
       "panels": [
         {
           "type": "table",
           "title": "csrx rule order: actual vs intent",
-          "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. Empty until the csrx has zones/policies (OPEN-QUESTIONS Q1).",
+          "description": "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. One row per zone pair; Actual order \u2260 Intended order raises security-policy-drift:csrx. Actual is empty when the poller is not running.",
           "targets": [
             {
               "datasource": {
                 "type": "influxdb",
                 "uid": "jtsuid"
               },
-              "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE $timeFilter GROUP BY \"device\", \"from_zone\", \"to_zone\"",
+              "query": "SELECT last(\"rule_order\") AS \"Actual order\", last(\"rule_count\") AS \"Actual rules\" FROM \"naf_secpolicy\" WHERE time > now() - 90s GROUP BY \"device\", \"from_zone\", \"to_zone\"",
               "rawQuery": true,
               "refId": "A",
               "resultFormat": "table"
@@ -4086,7 +4086,7 @@
                   "type": "auto"
                 }
               },
-              "noValue": "deferred: csrx has no zones/policies yet"
+              "noValue": "no data: is the poller running? (--only secpolicy)"
             },
             "overrides": [
               {
@@ -4591,7 +4591,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 42,
+  "version": 43,
   "weekStart": "",
   "id": null
 }
