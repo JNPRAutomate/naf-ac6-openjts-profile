@@ -104,6 +104,18 @@ def color_map(field: str, values: dict[str, str], other: str | None = None) -> d
         {"id": "mappings", "value": mappings}, {"id": "custom.cellOptions", "value": {"type": "color-text"}}]}
 
 
+# security-policy-drift zones, same colour in every security panel (cell background)
+ZONE_COLORS = {"SERVERS": "green", "VENDOR": "orange", "UNTRUST": "red"}
+
+
+def zone_cells(*columns: str) -> list[dict]:
+    return [{"matcher": {"id": "byName", "options": c}, "properties": [
+        {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
+        {"id": "mappings", "value": [{"type": "value", "options": {z: {"color": col, "index": i}
+                                                                   for i, (z, col) in enumerate(ZONE_COLORS.items())}}]},
+        {"id": "custom.cellOptions", "value": {"type": "color-background"}}]} for c in columns]
+
+
 LEVEL_MAP = {"OK": "green", "INFO": "blue", "WARNING": "orange", "CRITICAL": "red"}
 STATE_TL_OPTS = {"showValue": "auto", "mergeValues": True, "rowHeight": 0.8, "alignValue": "left",
                  "legend": {"showLegend": False, "displayMode": "list", "placement": "bottom"},
@@ -318,15 +330,69 @@ def build(y: int, first_id: int) -> list[dict]:
 
     # ---------------- security-policy-drift ----------------
     L.row("NAF · security-policy-drift")
-    L.add(table("csrx rule order: actual vs intent",
-                "Actual = naf_secpolicy (collector/netconf_poller.py --only secpolicy); intent = naf_intent usecase=security-policy-drift. One row per zone pair; Actual order ≠ Intended order raises security-policy-drift:csrx. Actual is empty when the poller is not running.",
-                [q("A", 'SELECT last("rule_order") AS "Actual order", last("rule_count") AS "Actual rules" FROM "naf_secpolicy" WHERE ' + NOW + ' GROUP BY "device", "from_zone", "to_zone"'),
-                 q("B", 'SELECT last("rule_order") AS "Intended order", last("rule_count") AS "Intended rules" FROM "naf_intent" WHERE "usecase" = \'security-policy-drift\' GROUP BY "device", "from_zone", "to_zone"')],
-                [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
-                 {"id": "organize", "options": {"indexByName": {"device": 0, "from_zone": 1, "to_zone": 2, "Actual order": 3, "Intended order": 4,
-                                                                "Actual rules": 5, "Intended rules": 6},
-                                                "renameByName": {"device": "Device", "from_zone": "From zone", "to_zone": "To zone"}}}],
-                no_value="no data: is the poller running? (--only secpolicy)"), 24, 5)
+    # one row per rule: naf_secpolicy_rule (poller) and naf_intent_rule (seed_intent) hold one point per rule with its
+    # position in the zone pair; merged on zone pair + position, so row n shows the n-th rule the csrx evaluates next to
+    # the n-th intended one. Actual: newest poll only (60 s), so a position that no longer exists leaves the table
+    rule_order = table("csrx rule order: actual vs intent",
+                       "One row per rule, top to bottom in the order the csrx evaluates them within each zone pair (#). Actual = "
+                       "naf_secpolicy_rule (collector/netconf_poller.py --only secpolicy, newest poll); Intended = naf_intent_rule "
+                       "(seed-intent). After break.sh, row 1 shows TEMP-VENDOR-ACCESS (orange) where intent has ALLOW-SSH, every rule "
+                       "below moves down one row, and the last row has no intended rule. Any difference raises security-policy-drift:csrx.",
+                       [q("A", 'SELECT last("rule") AS "Actual", "sort_key" FROM "naf_secpolicy_rule" WHERE time > now() - 60s '
+                               'GROUP BY "device", "from_zone", "to_zone", "position"'),
+                        q("B", 'SELECT last("rule") AS "Intended", "sort_key" FROM "naf_intent_rule" '
+                               'GROUP BY "device", "from_zone", "to_zone", "position"')],
+                       [{"id": "organize", "options": {"excludeByName": {"Time": True}}}, {"id": "merge", "options": {}},
+                        {"id": "sortBy", "options": {"sort": [{"field": "sort_key"}]}},
+                        {"id": "organize", "options": {"excludeByName": {"device": True, "sort_key": True},
+                                                       "indexByName": {"from_zone": 0, "to_zone": 1, "position": 2, "Actual": 3, "Intended": 4},
+                                                       "renameByName": {"from_zone": "From zone", "to_zone": "To zone", "position": "#"}}}],
+                       [{"matcher": {"id": "byName", "options": "Actual"}, "properties": [
+                           {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
+                           {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^TEMP-.*", "result": {"color": "orange", "index": 0}}}]},
+                           {"id": "custom.cellOptions", "value": {"type": "color-background"}}]},
+                        {"matcher": {"id": "byName", "options": "#"}, "properties": [{"id": "custom.width", "value": 60}]},
+                        *zone_cells("From zone", "To zone")],
+                       no_value="no data: is the poller running? (scripts/poller.sh start)")
+    L.add(rule_order, 24, 7)
+    # NAF_SECPOL_HITS: profile NETCONF item <get-security-policies-hit-count/> (= show security policies hit-count)
+    hits_where = f"{DEV} AND \"from_zone\" != 'all-zone'"  # all-zone: the built-in default policies
+    hits_table = table("csrx policy hit counts (show security policies hit-count)",
+                       "NAF_SECPOL_HITS (naf profile, NETCONF every 30 s, newest poll): one row per rule, top to bottom in the order the csrx evaluates them (sorted by the policy index, hidden). "
+                       "Hits count the sessions each rule matched since it was created or last cleared (clear security policies hit-count, as L1 does). After break.sh, TEMP-VENDOR-ACCESS (orange) "
+                       "sits on top and takes every flow to the vendor: its hits grow while ALLOW-SSH and ALLOW-ICMP stop.",
+                       # one row per rule: group by rule, and take its *current* index from its newest point. Grouping by index
+                       # would also show each rule at its old index after break.sh shifts it. 50 s = newest poll (30 s + ~10 s
+                       # write delay) only, so a deleted rule (TEMP after the fix) leaves the table within one poll
+                       [q("A", 'SELECT last("hit_count") AS "Hits", "policy_index", "policy_action" AS "Action" FROM "NAF_SECPOL_HITS" '
+                               f'WHERE {hits_where} AND time > now() - 50s GROUP BY "SHORTNAME", "from_zone", "to_zone", "policy_name"')],
+                       [{"id": "merge", "options": {}},
+                        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "policy_index", "destinationType": "number"}]}},
+                        {"id": "sortBy", "options": {"sort": [{"field": "policy_index"}]}},
+                        # hidden after the sort, so the rows keep the csrx's evaluation order (the point of the demo)
+                        {"id": "organize", "options": {"excludeByName": {"Time": True, "SHORTNAME": True, "policy_index": True},
+                                                       "indexByName": {"from_zone": 0, "to_zone": 1, "policy_name": 2, "Hits": 3, "Action": 4},
+                                                       "renameByName": {"from_zone": "From zone", "to_zone": "To zone", "policy_name": "Policy"}}}],
+                       [*zone_cells("From zone", "To zone"), color_map("Action", {"Permit": "green", "Deny": "red"}),
+                        {"matcher": {"id": "byName", "options": "Policy"}, "properties": [
+                            {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "transparent", "value": None}]}},
+                            {"id": "mappings", "value": [{"type": "regex", "options": {"pattern": "^TEMP-.*", "result": {"color": "orange", "index": 0}}}]},
+                            {"id": "custom.cellOptions", "value": {"type": "color-background"}}]}],
+                       no_value="no hit counts: is the naf profile assigned to the csrx?")
+    L.add(hits_table, 12, 7)
+    # cumulative, not per-minute increase: a rule that lives for one poll (TEMP-VENDOR-ACCESS fixed at L3) has no second point to diff
+    hits_ts = timeseries("Hits per rule over time",
+                         "NAF_SECPOL_HITS.hit_count, one line per zone pair and rule (the index is left out, so a rule keeps its line "
+                         "when break.sh shifts it down). flows.sh adds 1 hit per flow to the rule that matched: after the break the "
+                         "TEMP-VENDOR-ACCESS line (orange) appears and climbs while ALLOW-SSH and ALLOW-ICMP stay flat. A line ends "
+                         "when its rule is deleted; a rule created again (reset-lab, remediation) starts again from 0.",
+                         [q("A", 'SELECT last("hit_count") FROM "NAF_SECPOL_HITS" '
+                                 f'WHERE {hits_where} AND $timeFilter GROUP BY time(30s), "from_zone", "to_zone", "policy_name" fill(none)',
+                            "time_series", "$tag_from_zone → $tag_to_zone $tag_policy_name")], decimals=0)
+    hits_ts["fieldConfig"]["defaults"]["custom"].update(lineInterpolation="stepAfter", showPoints="always", pointSize=4, spanNulls=60000)
+    hits_ts["fieldConfig"]["overrides"] = [{"matcher": {"id": "byRegexp", "options": ".*TEMP-.*"}, "properties": [
+        {"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}]
+    L.add(hits_ts, 12, 7)
 
     # ---------------- swap-a-block ----------------
     L.row("NAF · swap-a-block")
