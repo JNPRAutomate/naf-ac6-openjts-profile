@@ -55,10 +55,6 @@
             {
               "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/active-drop-sessions",
               "field_type": "int"
-            },
-            {
-              "field_path": "/security-flow-information/flow-session-information/flow-session-summary-information/max-sessions",
-              "field_type": "int"
             }
           ],
           "interval": 60
@@ -242,11 +238,6 @@
           "to": "flow_active_drop_sessions"
         },
         {
-          "type": 1,
-          "from": "max-sessions",
-          "to": "flow_max_sessions"
-        },
-        {
           "type": 0,
           "from": "fpc-number",
           "to": "spu_fpc"
@@ -424,7 +415,6 @@
         "flow_active_unicast_sessions",
         "flow_failed_sessions",
         "flow_active_drop_sessions",
-        "flow_max_sessions",
         "spu_cpu_pct",
         "spu_mem_pct",
         "spu_flow_sessions",
