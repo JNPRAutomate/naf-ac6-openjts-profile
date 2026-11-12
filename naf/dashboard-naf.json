@@ -340,7 +340,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 8,
         "x": 0,
         "y": 6
@@ -419,7 +419,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 8,
         "x": 8,
         "y": 6
@@ -458,14 +458,16 @@
         "type": "influxdb",
         "uid": "jtsuid"
       },
-      "description": "NETCONF get-flow-session-information summary.",
+      "description": "NETCONF get-route-summary-information.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "fixedColor": "blue",
-            "mode": "fixed"
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
-          "decimals": 0,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -476,20 +478,19 @@
               }
             ]
           },
-          "unit": "none",
-          "unitScale": false
+          "unitScale": true
         },
         "overrides": [
           {
             "matcher": {
-              "id": "byRegexp",
-              "options": ".*Failed"
+              "id": "byName",
+              "options": "Hidden"
             },
             "properties": [
               {
-                "id": "color",
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "thresholds"
+                  "type": "color-text"
                 }
               },
               {
@@ -502,51 +503,126 @@
                       "value": null
                     },
                     {
-                      "color": "red",
+                      "color": "orange",
                       "value": 1
                     }
                   ]
                 }
+              },
+              {
+                "id": "custom.width",
+                "value": 93
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Table"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 73
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Destinations"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 103
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total routes"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 115
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 8,
         "x": 16,
         "y": 6
       },
-      "id": 24,
+      "id": 27,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
           ],
-          "fields": "/^(?!Time$).*/",
-          "values": false
+          "show": false
         },
-        "showPercentChange": false,
-        "textMode": "value_and_name",
-        "wideLayout": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Device"
+          }
+        ]
       },
       "pluginVersion": "10.3.1",
       "targets": [
         {
-          "alias": "$tag_SHORTNAME $col",
-          "query": "SELECT last(\"flow_active_sessions\") AS \"Active\", last(\"flow_failed_sessions\") AS \"Failed\", last(\"flow_max_sessions\") AS \"Max\" FROM \"SECURITY_FLOW\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\"",
+          "query": "SELECT last(\"rt_destinations\") AS \"Destinations\", last(\"rt_total\") AS \"Total routes\", last(\"rt_active\") AS \"Active\", last(\"rt_hidden\") AS \"Hidden\" FROM \"ROUTE_SUMMARY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"table_name\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series"
+          "resultFormat": "table"
         }
       ],
-      "title": "Flow sessions (cSRX)",
-      "type": "stat"
+      "title": "Routing tables (cRPD)",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "SHORTNAME": 0,
+              "table_name": 1
+            },
+            "renameByName": {
+              "SHORTNAME": "Device",
+              "table_name": "Table"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": false,
+                "field": "Device"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
@@ -608,10 +684,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 13
       },
       "id": 25,
       "options": {
@@ -708,10 +784,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 13
       },
       "id": 26,
       "options": {
@@ -740,137 +816,6 @@
       ],
       "title": "Memory",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "description": "NETCONF get-route-summary-information.",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unitScale": true
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Hidden"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "id": 27,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Device"
-          }
-        ]
-      },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "query": "SELECT last(\"rt_destinations\") AS \"Destinations\", last(\"rt_total\") AS \"Total routes\", last(\"rt_active\") AS \"Active\", last(\"rt_hidden\") AS \"Hidden\" FROM \"ROUTE_SUMMARY\" WHERE \"SHORTNAME\" =~ /^$device$/ AND $timeFilter GROUP BY \"SHORTNAME\", \"table_name\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table"
-        }
-      ],
-      "title": "Routing tables (cRPD)",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {
-              "SHORTNAME": 0,
-              "table_name": 1
-            },
-            "renameByName": {
-              "SHORTNAME": "Device",
-              "table_name": "Table"
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "desc": false,
-                "field": "Device"
-              }
-            ]
-          }
-        }
-      ],
-      "type": "table"
     },
     {
       "datasource": {
@@ -936,7 +881,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 22
       },
       "id": 28,
       "options": {
@@ -1043,9 +988,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 27
+        "y": 22
       },
       "id": 30,
       "options": {
@@ -1081,7 +1026,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 29
       },
       "id": 29,
       "panels": [
@@ -1140,7 +1085,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 35
+            "y": 30
           },
           "id": 3,
           "options": {
@@ -1225,7 +1170,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 42
+            "y": 37
           },
           "id": 14,
           "options": {
@@ -1326,7 +1271,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 49
+            "y": 36
           },
           "id": 4,
           "options": {
@@ -1412,7 +1357,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 30
       },
       "id": 9,
       "panels": [],
@@ -1459,7 +1404,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 31
       },
       "id": 5,
       "options": {
@@ -1529,7 +1474,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 31
       },
       "id": 6,
       "options": {
@@ -1560,152 +1505,12 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "legend": {
-              "showLegend": true
-            },
-            "lineWidth": 1,
-            "showPoints": "never",
-            "spanNulls": true
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "pps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 44
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "alias": "$tag_SHORTNAME $tag_if_name $col",
-          "query": "SELECT mean(\"in_errors_rate\") AS \"in_errors\", mean(\"out_errors_rate\") AS \"out_errors\", mean(\"in_drops_rate\") AS \"in_drops\", mean(\"out_drops_rate\") AS \"out_drops\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Errors & drops",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "jtsuid"
-      },
-      "description": "Collected via gNMI /interfaces/interface/state/counters (cRPD). Rates computed by the Telegraf rate processor.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisPlacement": "auto",
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "legend": {
-              "showLegend": true
-            },
-            "lineWidth": 1,
-            "showPoints": "never",
-            "spanNulls": true
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "pps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 44
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "alias": "$tag_SHORTNAME $tag_if_name $col",
-          "query": "SELECT mean(\"mcast_in_pkts_rate\") AS \"mcast_in\" FROM \"INTERFACES\" WHERE \"SHORTNAME\" =~ /^$device$/ AND \"if_name\" =~ /^$interface$/ AND $timeFilter GROUP BY time($__interval), \"SHORTNAME\", \"if_name\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Multicast in",
-      "type": "timeseries"
-    },
-    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 52
+        "y": 39
       },
       "id": 10,
       "panels": [
@@ -1742,7 +1547,7 @@
             "h": 7,
             "w": 6,
             "x": 0,
-            "y": 53
+            "y": 40
           },
           "id": 11,
           "options": {
@@ -1859,7 +1664,7 @@
             "h": 7,
             "w": 18,
             "x": 6,
-            "y": 53
+            "y": 40
           },
           "id": 12,
           "options": {
@@ -1962,7 +1767,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 40
       }
     },
     {
@@ -2030,7 +1835,7 @@
         "h": 7,
         "w": 4,
         "x": 0,
-        "y": 54
+        "y": 41
       },
       "datasource": {
         "type": "influxdb",
@@ -2113,7 +1918,7 @@
         "h": 7,
         "w": 4,
         "x": 4,
-        "y": 54
+        "y": 41
       },
       "datasource": {
         "type": "influxdb",
@@ -2176,7 +1981,7 @@
         "h": 7,
         "w": 6,
         "x": 8,
-        "y": 54
+        "y": 41
       },
       "datasource": {
         "type": "influxdb",
@@ -2207,7 +2012,7 @@
         "h": 7,
         "w": 10,
         "x": 14,
-        "y": 54
+        "y": 41
       },
       "datasource": {
         "type": "influxdb",
@@ -2296,7 +2101,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 61
+        "y": 48
       },
       "datasource": {
         "type": "influxdb",
@@ -2490,7 +2295,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 54
       },
       "datasource": {
         "type": "influxdb",
@@ -2713,7 +2518,7 @@
             "h": 6,
             "w": 14,
             "x": 0,
-            "y": 76
+            "y": 63
           },
           "datasource": {
             "type": "influxdb",
@@ -2815,7 +2620,7 @@
             "h": 6,
             "w": 10,
             "x": 14,
-            "y": 76
+            "y": 63
           },
           "datasource": {
             "type": "influxdb",
@@ -2892,7 +2697,7 @@
             "h": 5,
             "w": 24,
             "x": 0,
-            "y": 82
+            "y": 69
           },
           "datasource": {
             "type": "influxdb",
@@ -2905,7 +2710,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 75
+        "y": 62
       }
     },
     {
@@ -3018,7 +2823,7 @@
             "h": 6,
             "w": 8,
             "x": 0,
-            "y": 77
+            "y": 64
           },
           "datasource": {
             "type": "influxdb",
@@ -3152,7 +2957,7 @@
             "h": 6,
             "w": 8,
             "x": 8,
-            "y": 77
+            "y": 64
           },
           "datasource": {
             "type": "influxdb",
@@ -3223,7 +3028,7 @@
             "h": 6,
             "w": 8,
             "x": 16,
-            "y": 77
+            "y": 64
           },
           "datasource": {
             "type": "influxdb",
@@ -3297,7 +3102,7 @@
             "h": 7,
             "w": 16,
             "x": 0,
-            "y": 83
+            "y": 70
           },
           "datasource": {
             "type": "influxdb",
@@ -3391,7 +3196,7 @@
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 83
+            "y": 70
           },
           "datasource": {
             "type": "influxdb",
@@ -3404,7 +3209,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 76
+        "y": 63
       }
     },
     {
@@ -3530,7 +3335,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 78
+            "y": 65
           },
           "datasource": {
             "type": "influxdb",
@@ -3616,7 +3421,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 78
+            "y": 65
           },
           "datasource": {
             "type": "influxdb",
@@ -3748,7 +3553,7 @@
             "h": 5,
             "w": 12,
             "x": 0,
-            "y": 86
+            "y": 73
           },
           "datasource": {
             "type": "influxdb",
@@ -3840,7 +3645,7 @@
             "h": 5,
             "w": 12,
             "x": 12,
-            "y": 86
+            "y": 73
           },
           "datasource": {
             "type": "influxdb",
@@ -3919,7 +3724,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 91
+            "y": 78
           },
           "datasource": {
             "type": "influxdb",
@@ -3996,7 +3801,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 91
+            "y": 78
           },
           "datasource": {
             "type": "influxdb",
@@ -4009,7 +3814,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 77
+        "y": 64
       }
     },
     {
@@ -4280,7 +4085,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 79
+            "y": 66
           },
           "datasource": {
             "type": "influxdb",
@@ -4564,7 +4369,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 86
+            "y": 73
           },
           "datasource": {
             "type": "influxdb",
@@ -4657,7 +4462,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 86
+            "y": 73
           },
           "datasource": {
             "type": "influxdb",
@@ -4670,7 +4475,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 78
+        "y": 65
       }
     },
     {
@@ -4753,7 +4558,7 @@
             "h": 6,
             "w": 8,
             "x": 0,
-            "y": 80
+            "y": 67
           },
           "datasource": {
             "type": "influxdb",
@@ -4848,7 +4653,7 @@
             "h": 6,
             "w": 8,
             "x": 8,
-            "y": 80
+            "y": 67
           },
           "datasource": {
             "type": "influxdb",
@@ -4931,7 +4736,7 @@
             "h": 6,
             "w": 8,
             "x": 16,
-            "y": 80
+            "y": 67
           },
           "datasource": {
             "type": "influxdb",
@@ -5016,7 +4821,7 @@
             "h": 6,
             "w": 24,
             "x": 0,
-            "y": 86
+            "y": 73
           },
           "datasource": {
             "type": "influxdb",
@@ -5029,7 +4834,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 79
+        "y": 66
       }
     }
   ],
@@ -5129,7 +4934,7 @@
   "timezone": "browser",
   "title": "NAF PROFILE",
   "uid": "naf-profile",
-  "version": 50,
+  "version": 53,
   "weekStart": "",
   "id": null
 }

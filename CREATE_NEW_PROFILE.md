@@ -201,9 +201,10 @@ This file follows the same structure, with a gNMI input and more processors.
 | `filtering_list` | 150 | Keeps only interfaces whose `if_name` tag (`type: 0` = tag, `1` = field) matches `^(eth\|lo).*`. |
 | `enrichment_list` | 200/210 | Adds the cRPD metadata (`family: "crpd"`). For `INTERFACES` it uses `two_levels: true` with `level2_tags: ["if_name"]`, so per-interface metadata (such as `LINKNAME`) can be added too. |
 | `regex_list` | 300 | Renames the long prefix-limit field to `max-prefixes` (`type: 1` = rename a field by regex). |
-| `rate_list` | 500 | Turns the counters (`in_octets`, `in_pkts`, …) into rates by adding new fields with a `_rate` suffix (`in_octets_rate`, …). |
-| `monitoring_list` | 600 | Creates real-time alarms in the `ALARMING` measurement: `ETH_DROP_IN` / `ETH_DROP_OUT` fire when `in_errors_rate` / `out_errors_rate` is `gt` 1. |
+| `rate_list` | 500 | Turns the counters (`in_octets`, `out_octets`, `in_pkts`, `out_pkts`) into rates by adding new fields with a `_rate` suffix (`in_octets_rate`, …). The gNMI `counters` path also sends errors, drops and multicast counters; NAF doesn't rename, rate or store them. |
 | `influx_outputs` | – | Lists all the fields to store, **including the `_rate` fields** created by the rate processor. |
+
+The NAF profile has no `monitoring_list` (real-time alarms in the `ALARMING` measurement). It had one for interface errors (`ETH_DROP_IN` / `ETH_DROP_OUT`), removed together with the errors counters.
 
 > `order` only sets the relative order of the processors. JTSO can renumber them when it merges several profiles for the same device, but the relative order stays the same.
 

@@ -286,31 +286,6 @@
         },
         {
           "type": 1,
-          "from": "/interfaces/interface/state/counters/in-errors",
-          "to": "in_errors"
-        },
-        {
-          "type": 1,
-          "from": "/interfaces/interface/state/counters/out-errors",
-          "to": "out_errors"
-        },
-        {
-          "type": 1,
-          "from": "/interfaces/interface/state/counters/in-multicast-pkts",
-          "to": "mcast_in_pkts"
-        },
-        {
-          "type": 1,
-          "from": "/interfaces/interface/state/counters/in-drops",
-          "to": "in_drops"
-        },
-        {
-          "type": 1,
-          "from": "/interfaces/interface/state/counters/out-drops",
-          "to": "out_drops"
-        },
-        {
-          "type": 1,
           "from": "/interfaces/interface/state/admin-status",
           "to": "if_admin_status"
         },
@@ -650,12 +625,7 @@
         "in_pkts",
         "out_pkts",
         "in_octets",
-        "out_octets",
-        "mcast_in_pkts",
-        "in_errors",
-        "out_errors",
-        "in_drops",
-        "out_drops"
+        "out_octets"
       ]
     },
     {
@@ -665,42 +635,6 @@
       ],
       "fields": [
         "log_file_size"
-      ]
-    }
-  ],
-  "monitoring_list": [
-    {
-      "order": 600,
-      "namepass": [
-        "INTERFACES"
-      ],
-      "probes": [
-        {
-          "name": "ETH_DROP_IN",
-          "field": "in_errors_rate",
-          "type": "current",
-          "threshold": 1,
-          "operator": "gt",
-          "tags": [
-            "device",
-            "SHORTNAME",
-            "if_name",
-            "LINKNAME"
-          ]
-        },
-        {
-          "name": "ETH_DROP_OUT",
-          "field": "out_errors_rate",
-          "type": "current",
-          "threshold": 1,
-          "operator": "gt",
-          "tags": [
-            "device",
-            "SHORTNAME",
-            "if_name",
-            "LINKNAME"
-          ]
-        }
       ]
     }
   ],
@@ -733,16 +667,10 @@
         "session_flaps",
         "session_notif_sent",
         "max-prefixes",
-        "exception",
         "in_octets_rate",
         "out_octets_rate",
         "in_pkts_rate",
         "out_pkts_rate",
-        "in_errors_rate",
-        "out_errors_rate",
-        "in_drops_rate",
-        "out_drops_rate",
-        "mcast_in_pkts_rate",
         "if_admin_status",
         "if_oper_status",
         "if_mtu",
